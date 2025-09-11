@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video to Frames at FPS</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 2rem; }
+      .container { max-width: 720px; margin: 0 auto; }
+      .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 24px; }
+      h1 { margin-top: 0; }
+      label { display: block; margin: 12px 0 6px; font-weight: 600; }
+      select, input[type="number"] { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; }
+      button { margin-top: 16px; padding: 10px 16px; border: 0; background: #2563eb; color: white; border-radius: 8px; cursor: pointer; }
+      button:disabled { background: #9ca3af; cursor: not-allowed; }
+      button.secondary { background: #059669; margin-left: 8px; }
+      .note { color: #6b7280; font-size: 0.9rem; }
+      .flash { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; }
+      .video-preview { max-width: 100%; border-radius: 8px; margin-top: 16px; }
+      .controls { display: flex; gap: 8px; align-items: flex-end; }
+      .form-group { flex: 1; }
+      .button-group { display: flex; gap: 8px; margin-top: 16px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Extract frames at selected FPS</h1>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        {% if videos %}
+        <form method="post" id="videoForm">
+          <label for="video">Select Video</label>
+          <select id="video" name="video" required onchange="updateVideoPreview()">
+            <option value="">-- Choose a video --</option>
+            {% for video in videos %}
+              <option value="{{ video }}">{{ video }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="fps">Target FPS</label>
+          <select id="fps" name="fps" required onchange="updatePreviewSpeed()">
+            <option value="">-- Choose FPS --</option>
+            <option value="1">1 FPS</option>
+            <option value="5">5 FPS</option>
+            <option value="10">10 FPS</option>
+          </select>
+
+          <div class="button-group">
+            <button type="submit">Extract Frames</button>
+            <button type="button" id="playButton" class="secondary" onclick="playVideoAtFPS()" disabled>Play at Selected FPS</button>
+          </div>
+        </form>
+        
+        <video id="videoPreview" class="video-preview" controls style="display: none;">
+          Your browser does not support the video tag.
+        </video>
+        
+        {% else %}
+        <p class="note">No video files found in the <code>videos/</code> directory. Please add some video files (.mp4, .avi, .mov, .mkv, .wmv, .flv, .webm) to get started.</p>
+        {% endif %}
+        
+        <p class="note">Frames will be saved into the <code>outputs/</code> directory.</p>
+      </div>
+    </div>
+
+    <script>
+      function updateVideoPreview() {
+        const videoSelect = document.getElementById('video');
+        const videoPreview = document.getElementById('videoPreview');
+        const playButton = document.getElementById('playButton');
+        
+        if (videoSelect.value) {
+          videoPreview.src = '/video/' + encodeURIComponent(videoSelect.value);
+          videoPreview.style.display = 'block';
+          videoPreview.load();
+          updatePlayButton();
+        } else {
+          videoPreview.style.display = 'none';
+          playButton.disabled = true;
+        }
+      }
+
+      function updatePreviewSpeed() {
+        updatePlayButton();
+      }
+
+      function updatePlayButton() {
+        const videoSelect = document.getElementById('video');
+        const fpsSelect = document.getElementById('fps');
+        const playButton = document.getElementById('playButton');
+        
+        playButton.disabled = !(videoSelect.value && fpsSelect.value);
+      }
+
+      function playVideoAtFPS() {
+        const fpsSelect = document.getElementById('fps');
+        const videoPreview = document.getElementById('videoPreview');
+        const targetFPS = parseInt(fpsSelect.value);
+        
+        if (targetFPS && videoPreview.src) {
+          // Reset video to beginning
+          videoPreview.currentTime = 0;
+          
+          // Calculate playback rate (assuming original video is ~30fps)
+          const playbackRate = targetFPS / 30.0;
+          videoPreview.playbackRate = Math.max(0.1, Math.min(2.0, playbackRate));
+          
+          videoPreview.play();
+        }
+      }
+    </script>
+  </body>
+</html>

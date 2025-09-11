@@ -1,0 +1,632 @@
+[
+  {
+    "filename": "frame_000000.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000000.jpg",
+    "description": "iced glass windows reflect the overcast sky, while a tree and building with white doors frame the scene on a gray sidewalk.",
+    "frame_number": 0
+  },
+  {
+    "filename": "frame_000030.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000030.jpg",
+    "description": "iced concrete sidewalk, tree with green leaves, white building, and black car parked on street.",
+    "frame_number": 1
+  },
+  {
+    "filename": "frame_000060.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000060.jpg",
+    "description": "iced concrete sidewalk, white metal fence, tree with green leaves, and building in the background",
+    "frame_number": 2
+  },
+  {
+    "filename": "frame_000090.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000090.jpg",
+    "description": "iced over concrete sidewalk, tree with green leaves, white garage door, and parked car on street corner.",
+    "frame_number": 3
+  },
+  {
+    "filename": "frame_000120.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000120.jpg",
+    "description": "iced glass doors of a white garage with a black roof, accompanied by a tree and sidewalk, set against an overcast sky.",
+    "frame_number": 4
+  },
+  {
+    "filename": "frame_000150.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000150.jpg",
+    "description": "iced coffee shop with white walls and gray roof, featuring a large tree branch overhead.",
+    "frame_number": 5
+  },
+  {
+    "filename": "frame_000180.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000180.jpg",
+    "description": "iced glass doors of a white building with black shutters, accompanied by a tree and sidewalk, under an overcast sky.",
+    "frame_number": 6
+  },
+  {
+    "filename": "frame_000210.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000210.jpg",
+    "description": "iced concrete sidewalk, white metal doors, and trees create a serene urban scene.",
+    "frame_number": 7
+  },
+  {
+    "filename": "frame_000240.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000240.jpg",
+    "description": "iced concrete sidewalk, white metal fence, tree with green leaves, and building in the background",
+    "frame_number": 8
+  },
+  {
+    "filename": "frame_000270.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000270.jpg",
+    "description": "iced concrete sidewalk, black metal fence, white building with gray roof, tree with green leaves, and overcast sky.",
+    "frame_number": 9
+  },
+  {
+    "filename": "frame_000300.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000300.jpg",
+    "description": "iced concrete sidewalk, metal railing, and white building with gray roof, surrounded by trees and greenery.",
+    "frame_number": 10
+  },
+  {
+    "filename": "frame_000330.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000330.jpg",
+    "description": "iced gray concrete sidewalk, black metal fence, white building with green roof and tree, overcast sky",
+    "frame_number": 11
+  },
+  {
+    "filename": "frame_000360.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000360.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side of the street.",
+    "frame_number": 12
+  },
+  {
+    "filename": "frame_000390.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000390.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 13
+  },
+  {
+    "filename": "frame_000420.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000420.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 14
+  },
+  {
+    "filename": "frame_000450.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000450.jpg",
+    "description": "iced gray metal building with white trim, flanked by two trees and a black fence, with a clear blue sky overhead.",
+    "frame_number": 15
+  },
+  {
+    "filename": "frame_000480.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000480.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 16
+  },
+  {
+    "filename": "frame_000510.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000510.jpg",
+    "description": "iced gray metal building with white trim, two windows, and a single door, accompanied by a tree on the right side.",
+    "frame_number": 17
+  },
+  {
+    "filename": "frame_000540.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000540.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side.",
+    "frame_number": 18
+  },
+  {
+    "filename": "frame_000570.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000570.jpg",
+    "description": "iced gray metal building with white door and window, accompanied by a tree on the right side.",
+    "frame_number": 19
+  },
+  {
+    "filename": "frame_000600.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000600.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a cloudy sky.",
+    "frame_number": 20
+  },
+  {
+    "filename": "frame_000630.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000630.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree-filled street beyond.",
+    "frame_number": 21
+  },
+  {
+    "filename": "frame_000660.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000660.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side.",
+    "frame_number": 22
+  },
+  {
+    "filename": "frame_000690.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000690.jpg",
+    "description": "iced gray concrete sidewalk, flanked by two buildings with white and gray facades, and a tree on the right side.",
+    "frame_number": 23
+  },
+  {
+    "filename": "frame_000720.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000720.jpg",
+    "description": "iced gray metal building with white door and window, flanked by two other buildings on either side of the street.",
+    "frame_number": 24
+  },
+  {
+    "filename": "frame_000750.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000750.jpg",
+    "description": "iced gray metal building with white trim, two windows, and a black door, accompanied by a concrete sidewalk and power lines against a clear blue sky.",
+    "frame_number": 25
+  },
+  {
+    "filename": "frame_000780.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000780.jpg",
+    "description": "iced glass doors of a warehouse with a white building and blue sky backdrop, accompanied by a solitary car parked on the street.",
+    "frame_number": 26
+  },
+  {
+    "filename": "frame_000810.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000810.jpg",
+    "description": "iced gray concrete sidewalk, with two buildings and a car parked on the right side, under a clear blue sky.",
+    "frame_number": 27
+  },
+  {
+    "filename": "frame_000840.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000840.jpg",
+    "description": "iced gray concrete sidewalk, with two buildings and a power line pole on either side, under a clear blue sky.",
+    "frame_number": 28
+  },
+  {
+    "filename": "frame_000870.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000870.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, parked car on street, power lines above ground level.",
+    "frame_number": 29
+  },
+  {
+    "filename": "frame_000900.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000900.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, parked cars on street, power lines above ground level.",
+    "frame_number": 30
+  },
+  {
+    "filename": "frame_000930.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000930.jpg",
+    "description": "iced concrete sidewalk, brick building with white door and window, parked cars on street, power lines overhead, clear blue sky above.",
+    "frame_number": 31
+  },
+  {
+    "filename": "frame_000960.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000960.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, yellow light post, parked cars on street, clear blue sky above.",
+    "frame_number": 32
+  },
+  {
+    "filename": "frame_000990.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_000990.jpg",
+    "description": "iced glass door, gray metal frame, and white concrete sidewalk create an urban scene with a yellow pole on the right side.",
+    "frame_number": 33
+  },
+  {
+    "filename": "frame_001020.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_0c379378/frame_001020.jpg",
+    "description": "iced glass door with silver handle, reflecting blue trash can and white building in the background.",
+    "frame_number": 34
+  },
+  {
+    "filename": "frame_000000.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000000.jpg",
+    "description": "iced concrete sidewalk, tree with green leaves, white building, and parked car on street corner.",
+    "frame_number": 0
+  },
+  {
+    "filename": "frame_000030.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000030.jpg",
+    "description": "iced concrete sidewalk, tree with green leaves, white building, and black car parked on street.",
+    "frame_number": 1
+  },
+  {
+    "filename": "frame_000060.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000060.jpg",
+    "description": "iced concrete sidewalk, white metal fence, tree with green leaves, and building in the background",
+    "frame_number": 2
+  },
+  {
+    "filename": "frame_000090.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000090.jpg",
+    "description": "iced over concrete sidewalk, tree with green leaves, white garage door, and parked car on street corner.",
+    "frame_number": 3
+  },
+  {
+    "filename": "frame_000120.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000120.jpg",
+    "description": "iced glass doors of a white garage with a black roof, accompanied by a tree and sidewalk, set against an overcast sky.",
+    "frame_number": 4
+  },
+  {
+    "filename": "frame_000150.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000150.jpg",
+    "description": "iced coffee shop with white walls and gray roof, featuring a large tree branch overhead.",
+    "frame_number": 5
+  },
+  {
+    "filename": "frame_000180.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000180.jpg",
+    "description": "iced glass doors of a white building with black shutters, accompanied by a tree and sidewalk, under an overcast sky.",
+    "frame_number": 6
+  },
+  {
+    "filename": "frame_000210.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000210.jpg",
+    "description": "iced concrete sidewalk, white metal doors, and trees create a serene urban scene.",
+    "frame_number": 7
+  },
+  {
+    "filename": "frame_000240.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000240.jpg",
+    "description": "iced concrete sidewalk, white metal fence, tree with green leaves, and building in the background",
+    "frame_number": 8
+  },
+  {
+    "filename": "frame_000270.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000270.jpg",
+    "description": "iced concrete sidewalk, black metal fence, white building with gray roof, tree with green leaves, and overcast sky.",
+    "frame_number": 9
+  },
+  {
+    "filename": "frame_000300.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000300.jpg",
+    "description": "iced concrete sidewalk, metal railing, and white building with gray roof, surrounded by trees and greenery.",
+    "frame_number": 10
+  },
+  {
+    "filename": "frame_000330.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000330.jpg",
+    "description": "iced gray concrete sidewalk, black metal fence, white building with green roof and tree, overcast sky",
+    "frame_number": 11
+  },
+  {
+    "filename": "frame_000360.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000360.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side of the street.",
+    "frame_number": 12
+  },
+  {
+    "filename": "frame_000390.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000390.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 13
+  },
+  {
+    "filename": "frame_000420.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000420.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 14
+  },
+  {
+    "filename": "frame_000450.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000450.jpg",
+    "description": "iced gray metal building with white trim, flanked by two trees and a black fence, with a clear blue sky overhead.",
+    "frame_number": 15
+  },
+  {
+    "filename": "frame_000480.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000480.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 16
+  },
+  {
+    "filename": "frame_000510.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000510.jpg",
+    "description": "iced gray metal building with white trim, two windows, and a single door, accompanied by a tree on the right side.",
+    "frame_number": 17
+  },
+  {
+    "filename": "frame_000540.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000540.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side.",
+    "frame_number": 18
+  },
+  {
+    "filename": "frame_000570.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000570.jpg",
+    "description": "iced gray metal building with white door and window, accompanied by a tree on the right side.",
+    "frame_number": 19
+  },
+  {
+    "filename": "frame_000600.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000600.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a cloudy sky.",
+    "frame_number": 20
+  },
+  {
+    "filename": "frame_000630.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000630.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree-filled street beyond.",
+    "frame_number": 21
+  },
+  {
+    "filename": "frame_000660.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000660.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side.",
+    "frame_number": 22
+  },
+  {
+    "filename": "frame_000690.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000690.jpg",
+    "description": "iced gray concrete sidewalk, flanked by two buildings with white and gray facades, and a tree on the right side.",
+    "frame_number": 23
+  },
+  {
+    "filename": "frame_000720.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000720.jpg",
+    "description": "iced gray metal building with white door and window, flanked by two other buildings on either side of the street.",
+    "frame_number": 24
+  },
+  {
+    "filename": "frame_000750.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000750.jpg",
+    "description": "iced gray metal building with white trim, two windows, and a black door, accompanied by a concrete sidewalk and power lines against a clear blue sky.",
+    "frame_number": 25
+  },
+  {
+    "filename": "frame_000780.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000780.jpg",
+    "description": "iced glass doors of a warehouse with a white building and blue sky backdrop, accompanied by a solitary car parked on the street.",
+    "frame_number": 26
+  },
+  {
+    "filename": "frame_000810.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000810.jpg",
+    "description": "iced gray concrete sidewalk, with two buildings and a car parked on the right side, under a clear blue sky.",
+    "frame_number": 27
+  },
+  {
+    "filename": "frame_000840.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000840.jpg",
+    "description": "iced gray concrete sidewalk, with two buildings and a power line pole on either side, under a clear blue sky.",
+    "frame_number": 28
+  },
+  {
+    "filename": "frame_000870.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000870.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, parked car on street, power lines above ground level.",
+    "frame_number": 29
+  },
+  {
+    "filename": "frame_000900.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000900.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, parked cars on street, power lines above ground level.",
+    "frame_number": 30
+  },
+  {
+    "filename": "frame_000930.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000930.jpg",
+    "description": "iced concrete sidewalk, brick building with white door and window, parked cars on street, power lines overhead, clear blue sky above.",
+    "frame_number": 31
+  },
+  {
+    "filename": "frame_000960.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000960.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, yellow light post, parked cars on street, clear blue sky above.",
+    "frame_number": 32
+  },
+  {
+    "filename": "frame_000990.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_000990.jpg",
+    "description": "iced glass door, gray metal frame, and white concrete sidewalk create an urban scene with a yellow pole on the right side.",
+    "frame_number": 33
+  },
+  {
+    "filename": "frame_001020.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_2894ff8b/frame_001020.jpg",
+    "description": "iced glass door with silver handle, reflecting blue trash can and white building in the background.",
+    "frame_number": 34
+  },
+  {
+    "filename": "frame_000000.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000000.jpg",
+    "description": "iced concrete sidewalk, tree with green leaves, white building, and parked car on street corner.",
+    "frame_number": 0
+  },
+  {
+    "filename": "frame_000030.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000030.jpg",
+    "description": "iced concrete sidewalk, tree with green leaves, white building, and black car parked on street.",
+    "frame_number": 1
+  },
+  {
+    "filename": "frame_000060.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000060.jpg",
+    "description": "iced concrete sidewalk, white metal fence, tree with green leaves, and building in the background",
+    "frame_number": 2
+  },
+  {
+    "filename": "frame_000090.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000090.jpg",
+    "description": "iced over concrete sidewalk, tree with green leaves, white garage door, and parked car on street corner.",
+    "frame_number": 3
+  },
+  {
+    "filename": "frame_000120.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000120.jpg",
+    "description": "iced glass doors of a white garage with a black roof, accompanied by a tree and sidewalk, set against an overcast sky.",
+    "frame_number": 4
+  },
+  {
+    "filename": "frame_000150.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000150.jpg",
+    "description": "iced coffee shop with white walls and gray roof, featuring a large tree branch overhead.",
+    "frame_number": 5
+  },
+  {
+    "filename": "frame_000180.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000180.jpg",
+    "description": "iced glass doors of a white building with black shutters, accompanied by a tree and sidewalk, under an overcast sky.",
+    "frame_number": 6
+  },
+  {
+    "filename": "frame_000210.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000210.jpg",
+    "description": "iced concrete sidewalk, white metal doors, and trees create a serene urban scene.",
+    "frame_number": 7
+  },
+  {
+    "filename": "frame_000240.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000240.jpg",
+    "description": "iced concrete sidewalk, white metal fence, tree with green leaves, and building in the background",
+    "frame_number": 8
+  },
+  {
+    "filename": "frame_000270.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000270.jpg",
+    "description": "iced concrete sidewalk, black metal fence, white building with gray roof, tree with green leaves, and overcast sky.",
+    "frame_number": 9
+  },
+  {
+    "filename": "frame_000300.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000300.jpg",
+    "description": "iced concrete sidewalk, metal railing, and white building with gray roof, surrounded by trees and greenery.",
+    "frame_number": 10
+  },
+  {
+    "filename": "frame_000330.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000330.jpg",
+    "description": "iced gray concrete sidewalk, black metal fence, white building with green roof and tree, overcast sky",
+    "frame_number": 11
+  },
+  {
+    "filename": "frame_000360.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000360.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side of the street.",
+    "frame_number": 12
+  },
+  {
+    "filename": "frame_000390.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000390.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 13
+  },
+  {
+    "filename": "frame_000420.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000420.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 14
+  },
+  {
+    "filename": "frame_000450.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000450.jpg",
+    "description": "iced gray metal building with white trim, flanked by two trees and a black fence, with a clear blue sky overhead.",
+    "frame_number": 15
+  },
+  {
+    "filename": "frame_000480.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000480.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a clear blue sky.",
+    "frame_number": 16
+  },
+  {
+    "filename": "frame_000510.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000510.jpg",
+    "description": "iced gray metal building with white trim, two windows, and a single door, accompanied by a tree on the right side.",
+    "frame_number": 17
+  },
+  {
+    "filename": "frame_000540.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000540.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side.",
+    "frame_number": 18
+  },
+  {
+    "filename": "frame_000570.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000570.jpg",
+    "description": "iced gray metal building with white door and window, accompanied by a tree on the right side.",
+    "frame_number": 19
+  },
+  {
+    "filename": "frame_000600.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000600.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree on the right side, set against a cloudy sky.",
+    "frame_number": 20
+  },
+  {
+    "filename": "frame_000630.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000630.jpg",
+    "description": "iced gray metal building with white trim, two doors, and a tree-filled street beyond.",
+    "frame_number": 21
+  },
+  {
+    "filename": "frame_000660.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000660.jpg",
+    "description": "iced gray metal building with two doors and windows, accompanied by a tree on the right side.",
+    "frame_number": 22
+  },
+  {
+    "filename": "frame_000690.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000690.jpg",
+    "description": "iced gray concrete sidewalk, flanked by two buildings with white and gray facades, and a tree on the right side.",
+    "frame_number": 23
+  },
+  {
+    "filename": "frame_000720.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000720.jpg",
+    "description": "iced gray metal building with white door and window, flanked by two other buildings on either side of the street.",
+    "frame_number": 24
+  },
+  {
+    "filename": "frame_000750.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000750.jpg",
+    "description": "iced gray metal building with white trim, two windows, and a black door, accompanied by a concrete sidewalk and power lines against a clear blue sky.",
+    "frame_number": 25
+  },
+  {
+    "filename": "frame_000780.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000780.jpg",
+    "description": "iced glass doors of a warehouse with a white building and blue sky backdrop, accompanied by a solitary car parked on the street.",
+    "frame_number": 26
+  },
+  {
+    "filename": "frame_000810.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000810.jpg",
+    "description": "iced gray concrete sidewalk, with two buildings and a car parked on the right side, under a clear blue sky.",
+    "frame_number": 27
+  },
+  {
+    "filename": "frame_000840.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000840.jpg",
+    "description": "iced gray concrete sidewalk, with two buildings and a power line pole on either side, under a clear blue sky.",
+    "frame_number": 28
+  },
+  {
+    "filename": "frame_000870.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000870.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, parked car on street, power lines above ground level.",
+    "frame_number": 29
+  },
+  {
+    "filename": "frame_000900.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000900.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, parked cars on street, power lines above ground level.",
+    "frame_number": 30
+  },
+  {
+    "filename": "frame_000930.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000930.jpg",
+    "description": "iced concrete sidewalk, brick building with white door and window, parked cars on street, power lines overhead, clear blue sky above.",
+    "frame_number": 31
+  },
+  {
+    "filename": "frame_000960.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000960.jpg",
+    "description": "iced concrete sidewalk, white building with gray roof and black door, yellow light post, parked cars on street, clear blue sky above.",
+    "frame_number": 32
+  },
+  {
+    "filename": "frame_000990.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_000990.jpg",
+    "description": "iced glass door, gray metal frame, and white concrete sidewalk create an urban scene with a yellow pole on the right side.",
+    "frame_number": 33
+  },
+  {
+    "filename": "frame_001020.jpg",
+    "path": "/home/cmuser/ASIF/loco-simple/outputs/demo_data_at_1fps_5a92f484/frame_001020.jpg",
+    "description": "iced glass door with silver handle, reflecting blue trash can and white building in the background.",
+    "frame_number": 34
+  }
+]

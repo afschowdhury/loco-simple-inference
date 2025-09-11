@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Viewer - AI Descriptions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            padding: 15px 30px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            margin: 0;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        .frames-grid {
+            padding: 30px;
+        }
+
+        .frame-item {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .frame-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .frame-image {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .frame-image img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .frame-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .frame-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .frame-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #34495e;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .frame-meta {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 30px;
+            color: #7f8c8d;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .frame-item {
+                flex-direction: column;
+            }
+
+            .frame-image {
+                flex: none;
+                max-width: 100%;
+            }
+
+            .frame-image img {
+                height: 200px;
+            }
+
+            .controls {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ Frame Viewer with AI Descriptions</h1>
+            <p>Powered by Moondream Vision Model</p>
+        </div>
+
+        <div class="controls">
+            <div>
+                <strong>Directory:</strong> {{ dirname }}
+            </div>
+            <div>
+                {% if not has_descriptions %}
+                <button id="generateBtn" class="btn btn-primary" onclick="generateDescriptions()">
+                    🤖 Generate AI Descriptions
+                </button>
+                {% endif %}
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    ← Back to Home
+                </a>
+            </div>
+        </div>
+
+        <div id="status" style="display: none;"></div>
+
+        <div class="frames-grid">
+            {% if has_descriptions %}
+                {% for frame in frames %}
+                <div class="frame-item">
+                    <div class="frame-image">
+                        <img src="{{ url_for('serve_frame', frame_path=frame.path.replace('/home/cmuser/ASIF/loco-simple/', '')) }}" 
+                             alt="Frame {{ frame.frame_number }}"
+                             loading="lazy">
+                    </div>
+                    <div class="frame-content">
+                        <div class="frame-title">
+                            Frame {{ frame.frame_number }} - {{ frame.filename }}
+                        </div>
+                        <div class="frame-description">
+                            {{ frame.description }}
+                        </div>
+                        <div class="frame-meta">
+                            Generated by Moondream AI
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>No Descriptions Available</h3>
+                    <p>Click the "Generate AI Descriptions" button above to create descriptions for all frames using the Moondream model.</p>
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🤖</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <h3>Generating AI Descriptions...</h3>
+            <p>This may take a few minutes depending on the number of frames.</p>
+        </div>
+    </div>
+
+    <script>
+        async function generateDescriptions() {
+            const generateBtn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const status = document.getElementById('status');
+            const framesGrid = document.querySelector('.frames-grid');
+
+            // Show loading state
+            generateBtn.disabled = true;
+            loading.style.display = 'block';
+            framesGrid.style.display = 'none';
+            status.style.display = 'none';
+
+            try {
+                const response = await fetch(`/generate_descriptions/{{ dirname }}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reload the page to show the new descriptions
+                    window.location.reload();
+                } else {
+                    throw new Error(data.error || 'Failed to generate descriptions');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Show error message
+                status.className = 'status error';
+                status.textContent = `Error: ${error.message}`;
+                status.style.display = 'block';
+                
+                // Reset UI
+                loading.style.display = 'none';
+                framesGrid.style.display = 'block';
+                generateBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
