@@ -8,3 +8,4 @@ loco-env/
 *.pyzw
 *.pyzwz
 videos/
+.env

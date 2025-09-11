@@ -1,0 +1,54 @@
+[
+  {
+    "timestamp": "00:00:00",
+    "demo_voice_command": "start walking",
+    "level": "ground walk"
+  },
+  {
+    "timestamp": "00:05:00",
+    "demo_voice_command": "I am crouch walking",
+    "level": "crouch walk"
+  },
+
+  {
+    "timestamp": "00:13:00",
+    "demo_voice_command": "ending crouch walking",
+    "level": "end crouch walk"
+  },
+  {
+    "timestamp": "00:16:00",
+    "demo_voice_command": "moving forward",
+    "level": "ground walk"
+  },
+  {
+    "timestamp": "00:19:00",
+    "demo_voice_command": "crouching forward",
+    "level": "crouch walk"
+  },
+
+  {
+    "timestamp": "00:26:00",
+    "demo_voice_command": "standing up",
+    "level": "end crouch walk"
+  },
+  {
+    "timestamp": "00:30:00",
+    "demo_voice_command": "moving on",
+    "level": "ground walk"
+  },
+  {
+    "timestamp": "00:33:00",
+    "demo_voice_command": "walking",
+    "level": "crouch walk"
+  },
+  {
+    "timestamp": "00:40:00",
+    "demo_voice_command": "crouching again",
+    "level": "crouch walk"
+  },
+  {
+    "timestamp": "00:44:00",
+    "demo_voice_command": "standing up",
+    "level": "end crouch walk"
+  }
+]
