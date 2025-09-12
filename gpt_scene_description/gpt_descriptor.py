@@ -19,7 +19,7 @@ class GPTSceneDescriptor:
     def __init__(self, 
                  api_key: Optional[str] = None,
                  model: str = "gpt-4o",
-                 max_tokens: int = 150,
+                 max_tokens: int = 100,
                  temperature: float = 0.7,
                  max_memory_size: int = 10,
                  enable_context: bool = True,
@@ -164,10 +164,9 @@ class GPTSceneDescriptor:
             
             # Enhanced prompts for better coherence
             system_prompt = (
-                "You are an expert visual storyteller and scene analyst. Create coherent, "
-                "flowing descriptions that build a visual narrative. Focus on atmosphere, "
-                "key elements, activities, and mood while maintaining narrative continuity "
-                "with previous scenes. Be descriptive yet concise."
+                "You are an expert to analyse the scenes from a head cam of a person walking in a construction "
+                "site. Your scene description will be used to an expert with the person's voice command for locomotion mode prediction. "
+                "You will be given previous scene descriptions as well. Please describe the scene that may help the locomotion mode prediction."
             )
             
             if context:
@@ -177,8 +176,7 @@ class GPTSceneDescriptor:
                 )
             else:
                 user_prompt = (
-                    "Describe this scene in detail, establishing the beginning of a visual narrative. "
-                    "Focus on the atmosphere, key elements, setting, and mood."
+                    "Describe this scene."
                 )
             
             # Make API call

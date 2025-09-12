@@ -1,181 +1,198 @@
 #!/usr/bin/env python3
 """
-Example usage of Scene Change Detection + GPT Description system
-This demonstrates the complete workflow from scene detection to description
+Example usage of the Locomotion Inference System
+Demonstrates how to integrate with live descriptor and GPT descriptor
 """
 
 import os
 import cv2
-from scene_change_detection.change_detector import SceneChangeDetector
+import numpy as np
+from locomotion_infer import LocomotionInferenceEngine, LocomotionState, update_locomotion_stm
+from live_descriptor.live_descriptor import process_live_frame
 from gpt_scene_description.gpt_descriptor import update_gpt_description_memory
 
-def main():
-    """Main example demonstrating the complete workflow"""
+def example_real_time_integration():
+    """
+    Example of how to integrate locomotion inference in a real-time system
+    """
+    print("🚀 Real-time Locomotion Detection Example")
     
-    print("🎬 Scene Change Detection + GPT Description Example")
-    print("=" * 60)
+    # Set your OpenAI API key
+    # os.environ['OPENAI_API_KEY'] = 'your-api-key-here'
     
-    # Check for API key
-    if not os.getenv('OPENAI_API_KEY'):
-        print("⚠️  OPENAI_API_KEY not found!")
-        print("💡 Set your API key: export OPENAI_API_KEY='your-key-here'")
-        print("📝 This example will run but skip GPT descriptions")
-        use_gpt = False
-    else:
-        print("✅ OpenAI API key found")
-        use_gpt = True
-    
-    # Initialize systems
-    print("\n🔧 Initializing systems...")
-    
-    # 1. Initialize Scene Change Detector
-    detector = SceneChangeDetector(
-        model_name="mobileclip",  # or "fastervit"
-        similarity_threshold=0.85,  # Lower = more sensitive
-        use_fp16=True,
-        enable_tensorrt=True
+    # Initialize the locomotion inference engine
+    engine = LocomotionInferenceEngine(
+        voice_data_path="data_json/loco_data_4.json",
+        model="gpt-4o-mini",  # Fast model for real-time
+        max_memory_size=10,
+        confidence_threshold=0.7
     )
     
-    # 2. Initialize GPT description memory
+    # Initialize memory stores
     gpt_description_memory = []
+    live_description_memory = []
+    locomotion_stm = []
     
-    # 3. Process video or webcam
-    video_source = "/home/cmuser/ASIF/loco-simple/videos/demo_data.mp4"  # or 0 for webcam
+    # Example: Process a single frame
+    print("\n📸 Processing example frame...")
     
-    if os.path.exists(video_source):
-        print(f"📹 Processing video: {video_source}")
-    else:
-        print("📹 Video file not found, using webcam (press 'q' to quit)")
-        video_source = 0
-    
-    cap = cv2.VideoCapture(video_source)
-    
-    if not cap.isOpened():
-        print("❌ Could not open video source")
-        return
-    
-    frame_count = 0
-    scene_count = 0
-    
-    print("\n🎬 Starting processing...")
-    print("Press 'q' to quit, 's' to save descriptions to file")
+    # Create a dummy frame (in real usage, this would come from your camera/video)
+    dummy_frame = np.zeros((480, 640, 3), dtype=np.uint8)
     
     try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("📹 End of video or failed to read frame")
-                break
-            
-            # Detect scene change
-            is_changed, changed_frame = detector.detect_scene_change(frame)
-            
-            if is_changed and changed_frame is not None:
-                scene_count += 1
-                print(f"\n🔄 Scene change #{scene_count} detected at frame {frame_count}")
-                
-                if use_gpt:
-                    # Generate GPT description
-                    print("🤖 Generating description with GPT-4o...")
-                    try:
-                        gpt_description_memory = update_gpt_description_memory(
-                            gpt_description_memory, changed_frame
-                        )
-                        
-                        if gpt_description_memory:
-                            latest_desc = gpt_description_memory[-1]
-                            print(f"📝 Description: {latest_desc['description']}")
-                        
-                    except Exception as e:
-                        print(f"❌ GPT description failed: {e}")
-                else:
-                    # Add mock description
-                    mock_desc = {
-                        'timestamp': '2024-01-15T10:30:45',
-                        'description': f'Scene change {scene_count} detected (GPT disabled)',
-                        'scene_id': scene_count
-                    }
-                    gpt_description_memory.append(mock_desc)
-                    print(f"📝 Mock description added (set OPENAI_API_KEY for real descriptions)")
-                
-                # Optionally save the frame
-                frame_filename = f"scene_change_{scene_count}.jpg"
-                cv2.imwrite(frame_filename, changed_frame)
-                print(f"💾 Saved frame: {frame_filename}")
-            
-            frame_count += 1
-            
-            # Progress indicator (every 50 frames)
-            if frame_count % 50 == 0:
-                print(f"📊 Progress: {frame_count} frames, {scene_count} scene changes")
-            
-            # For webcam, show the frame
-            if video_source == 0:
-                cv2.imshow('Scene Detection', frame)
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord('q'):
-                    break
-                elif key == ord('s'):
-                    save_descriptions(gpt_description_memory)
-            
-            # Limit processing for demo video
-            if video_source != 0 and frame_count >= 300:  # Process first 300 frames
-                print("📊 Demo limit reached (300 frames)")
-                break
-    
-    except KeyboardInterrupt:
-        print("\n⏹️  Processing stopped by user")
-    
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
+        # 1. Process frame with live descriptor
+        live_description_memory = process_live_frame(
+            live_description_memory,
+            dummy_frame,
+            prompt="Describe the person's posture and movement in this image."
+        )
         
-        # Print final results
-        print_results(frame_count, scene_count, gpt_description_memory, detector)
+        # 2. Process frame with GPT descriptor (if needed for scene context)
+        gpt_description_memory = update_gpt_description_memory(
+            gpt_description_memory,
+            dummy_frame
+        )
         
-        # Save descriptions
-        if gpt_description_memory:
-            save_descriptions(gpt_description_memory)
-
-def print_results(frame_count, scene_count, memory, detector):
-    """Print processing results"""
-    print("\n" + "=" * 60)
-    print("📊 PROCESSING RESULTS")
-    print("=" * 60)
-    print(f"📹 Total frames processed: {frame_count}")
-    print(f"🔄 Scene changes detected: {scene_count}")
-    print(f"📝 Descriptions generated: {len(memory)}")
-    
-    # Performance stats
-    stats = detector.get_performance_stats()
-    print(f"\n⚡ Performance:")
-    print(f"   Average inference time: {stats.get('average_inference_time_ms', 0):.1f}ms")
-    print(f"   FPS: {stats.get('fps', 0):.1f}")
-    print(f"   Device: {stats.get('device', 'unknown')}")
-    
-    # Show descriptions
-    if memory:
-        print(f"\n📝 Generated Descriptions:")
-        for desc in memory[-5:]:  # Show last 5
-            print(f"   Scene {desc['scene_id']}: {desc['description'][:100]}...")
-
-def save_descriptions(memory):
-    """Save descriptions to file"""
-    if not memory:
-        print("📝 No descriptions to save")
-        return
-    
-    import json
-    from datetime import datetime
-    
-    filename = f"scene_descriptions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    
-    try:
-        with open(filename, 'w') as f:
-            json.dump(memory, f, indent=2)
-        print(f"💾 Descriptions saved to: {filename}")
+        # 3. Update locomotion inference
+        locomotion_stm = engine.update_locomotion_stm(
+            gpt_description_memory,
+            live_description_memory,
+            locomotion_stm
+        )
+        
+        # 4. Get current locomotion mode
+        current_mode = engine.get_current_mode(locomotion_stm)
+        print(f"🚶 Current locomotion mode: {current_mode}")
+        
+        # 5. Get performance stats
+        stats = engine.get_performance_stats()
+        print(f"⚡ Inference time: {stats.get('last_inference_time_ms', 0):.1f}ms")
+        
     except Exception as e:
-        print(f"❌ Failed to save descriptions: {e}")
+        print(f"❌ Error in processing: {e}")
+        print("💡 Make sure OPENAI_API_KEY is set and Ollama is running for live descriptor")
+
+def example_standalone_function():
+    """
+    Example using the standalone update_locomotion_stm function
+    """
+    print("\n🔧 Standalone Function Example")
+    
+    # Initialize memory with some dummy data
+    gpt_description_memory = [
+        {
+            "timestamp": "2024-01-01T10:00:00",
+            "description": "Person standing upright in a room",
+            "scene_id": 1
+        }
+    ]
+    
+    live_description_memory = [
+        {
+            "timestamp": "2024-01-01T10:00:00",
+            "description": "Person in normal standing position",
+            "frame_index": 0
+        }
+    ]
+    
+    locomotion_stm = []
+    
+    # Update locomotion using standalone function
+    updated_stm = update_locomotion_stm(
+        gpt_description_memory=gpt_description_memory,
+        live_description_memory=live_description_memory,
+        locomotion_stm=locomotion_stm,
+        voice_data_path="data_json/loco_data_4.json"
+    )
+    
+    print(f"📊 Updated locomotion STM: {len(updated_stm)} states")
+    if updated_stm:
+        latest = updated_stm[-1]
+        print(f"Latest state: {latest.mode} (confidence: {latest.confidence:.2f})")
+
+def example_with_video_simulation():
+    """
+    Example simulating video processing with locomotion detection
+    """
+    print("\n🎬 Video Simulation Example")
+    
+    # Initialize engine
+    engine = LocomotionInferenceEngine(
+        voice_data_path="data_json/loco_data_4.json"
+    )
+    
+    # Initialize memories
+    gpt_description_memory = []
+    live_description_memory = []
+    locomotion_stm = []
+    
+    # Simulate video frames with different scenarios
+    scenarios = [
+        ("00:00:00", "Person starts walking normally", "ground walk"),
+        ("00:05:00", "Person begins to crouch down", "crouch walk"),
+        ("00:13:00", "Person stands up from crouch", "end crouch walk"),
+        ("00:16:00", "Person walking forward normally", "ground walk"),
+        ("00:19:00", "Person crouching and moving forward", "crouch walk"),
+    ]
+    
+    for timestamp, description, expected_mode in scenarios:
+        print(f"\n⏰ Processing timestamp: {timestamp}")
+        print(f"📝 Scene: {description}")
+        
+        # Add descriptions to memory
+        live_description_memory.append({
+            "timestamp": timestamp,
+            "description": description,
+            "frame_index": len(live_description_memory)
+        })
+        
+        gpt_description_memory.append({
+            "timestamp": timestamp,
+            "description": description,
+            "scene_id": len(gpt_description_memory) + 1
+        })
+        
+        # Update locomotion
+        locomotion_stm = engine.update_locomotion_stm(
+            gpt_description_memory,
+            live_description_memory,
+            locomotion_stm,
+            timestamp
+        )
+        
+        # Check result
+        if locomotion_stm:
+            predicted = locomotion_stm[-1]
+            print(f"🎯 Predicted: {predicted.mode} (expected: {expected_mode})")
+            print(f"📊 Confidence: {predicted.confidence:.2f}")
+            print(f"🔍 Source: {predicted.source}")
+        
+        print("-" * 50)
+    
+    # Final summary
+    print(f"\n📈 Final Summary:")
+    print(f"Total predictions: {len(locomotion_stm)}")
+    mode_sequence = [state.mode for state in locomotion_stm]
+    print(f"Mode sequence: {' → '.join(mode_sequence)}")
+    
+    # Save results
+    engine.save_locomotion_memory(locomotion_stm, "example_results.json")
+    print("💾 Results saved to example_results.json")
 
 if __name__ == "__main__":
-    main()
+    print("🤖 Locomotion Inference System - Examples")
+    print("=" * 60)
+    
+    # Run examples
+    try:
+        example_standalone_function()
+        example_with_video_simulation()
+        
+        # Uncomment to test with real API calls
+        # example_real_time_integration()
+        
+    except Exception as e:
+        print(f"❌ Example failed: {e}")
+        print("💡 Make sure to set OPENAI_API_KEY environment variable")
+    
+    print("\n✅ Examples completed!")
