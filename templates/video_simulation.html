@@ -128,6 +128,46 @@
             height: 100%;
             transition: width 0.3s ease;
         }
+        
+        .prediction-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            border-left: 3px solid #007bff;
+        }
+        
+        .prediction-info.correct {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .prediction-info.incorrect {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .prediction-info.no-prediction {
+            border-left-color: #6c757d;
+            background: #e9ecef;
+        }
+        
+        .confidence-mini {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .accuracy-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+        
+        .accuracy-correct { background-color: #28a745; }
+        .accuracy-incorrect { background-color: #dc3545; }
+        .accuracy-unknown { background-color: #6c757d; }
     </style>
 </head>
 <body>
@@ -244,6 +284,18 @@
                                 <div class="stat-number" id="liveDescriptions">0</div>
                                 <div class="text-muted">Live Descriptions</div>
                             </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalPredictions">0</div>
+                                <div class="text-muted">Total Predictions</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number text-success" id="correctPredictions">0</div>
+                                <div class="text-muted">Correct Predictions</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number text-primary" id="accuracyPercentage">0%</div>
+                                <div class="text-muted">Accuracy</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -312,6 +364,7 @@
         let statusCheckInterval = null;
         let dataEntries = [];
         let currentEntryIndex = -1;
+        let predictions = [];  // Store all predictions for accuracy calculation
 
         // DOM elements
         const videoSelect = document.getElementById('videoSelect');
@@ -334,6 +387,9 @@
         const sceneChanges = document.getElementById('sceneChanges');
         const gptDescriptions = document.getElementById('gptDescriptions');
         const liveDescriptions = document.getElementById('liveDescriptions');
+        const totalPredictions = document.getElementById('totalPredictions');
+        const correctPredictions = document.getElementById('correctPredictions');
+        const accuracyPercentage = document.getElementById('accuracyPercentage');
         const dataEntriesContainer = document.getElementById('dataEntries');
         const processingLog = document.getElementById('processingLog');
 
@@ -495,6 +551,13 @@
                 gptDescriptions.textContent = status.gpt_descriptions_count;
                 liveDescriptions.textContent = status.live_descriptions_count;
                 
+                // Update prediction accuracy statistics
+                if (status.prediction_accuracy) {
+                    totalPredictions.textContent = status.prediction_accuracy.total;
+                    correctPredictions.textContent = status.prediction_accuracy.correct;
+                    accuracyPercentage.textContent = status.prediction_accuracy.percentage + '%';
+                }
+                
                 // Update voice command
                 if (status.current_voice_command) {
                     currentVoiceCommand.textContent = status.current_voice_command;
@@ -508,6 +571,12 @@
                 // Update prediction
                 if (status.current_prediction) {
                     updatePrediction(status.current_prediction);
+                    
+                    // Update timeline with prediction (find matching timestamp)
+                    const currentEntry = dataEntries.find(entry => entry.demo_voice_command === status.current_voice_command);
+                    if (currentEntry) {
+                        updateTimelinePrediction(currentEntry.timestamp, status.current_prediction, currentEntry.level);
+                    }
                 }
                 
                 // Update data entries highlight
@@ -567,19 +636,58 @@
             }
             
             const entriesHtml = entries.map((entry, index) => `
-                <div class="data-entry" data-index="${index}">
+                <div class="data-entry" data-index="${index}" data-timestamp="${entry.timestamp}">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
+                        <div class="flex-grow-1">
                             <small class="text-muted">${entry.timestamp}</small>
                             <div class="fw-bold">${entry.demo_voice_command}</div>
-                            <small class="badge bg-secondary">${entry.level}</small>
+                            <div class="d-flex align-items-center">
+                                <small class="badge bg-secondary">${entry.level}</small>
+                                <span class="accuracy-indicator accuracy-unknown" id="accuracy-${index}" title="Prediction pending"></span>
+                            </div>
                         </div>
                         <i class="fas fa-clock text-muted"></i>
+                    </div>
+                    <div class="prediction-info no-prediction" id="prediction-${index}" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Predicted:</strong> <span class="predicted-mode">-</span>
+                                <span class="confidence-mini">(<span class="confidence-value">0</span>% confidence)</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `).join('');
             
             dataEntriesContainer.innerHTML = entriesHtml;
+        }
+
+        function updateTimelinePrediction(timestamp, prediction, actualLevel) {
+            // Find the entry with matching timestamp
+            const entries = document.querySelectorAll('.data-entry');
+            entries.forEach(entry => {
+                const entryTimestamp = entry.getAttribute('data-timestamp');
+                if (entryTimestamp === timestamp) {
+                    const index = entry.getAttribute('data-index');
+                    const predictionDiv = document.getElementById(`prediction-${index}`);
+                    const accuracyIndicator = document.getElementById(`accuracy-${index}`);
+                    
+                    if (prediction && predictionDiv) {
+                        // Show prediction info
+                        predictionDiv.style.display = 'block';
+                        predictionDiv.querySelector('.predicted-mode').textContent = prediction.mode_detected;
+                        predictionDiv.querySelector('.confidence-value').textContent = (prediction.confidence_score * 100).toFixed(1);
+                        
+                        // Determine if prediction is correct
+                        const isCorrect = prediction.mode_detected.toLowerCase() === actualLevel.toLowerCase();
+                        
+                        // Update styling based on accuracy
+                        predictionDiv.className = `prediction-info ${isCorrect ? 'correct' : 'incorrect'}`;
+                        accuracyIndicator.className = `accuracy-indicator ${isCorrect ? 'accuracy-correct' : 'accuracy-incorrect'}`;
+                        accuracyIndicator.title = isCorrect ? 'Correct prediction' : 'Incorrect prediction';
+                    }
+                }
+            });
         }
 
         function highlightCurrentEntry(currentCommand) {
