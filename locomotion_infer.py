@@ -179,7 +179,7 @@ def detect_locomotion_mode(gpt_description: str = "",
     """
     # Create or reuse detector instance
     if not hasattr(detect_locomotion_mode, 'detector'):
-        detect_locomotion_mode.detector = SimpleLocomotionInference(api_key=api_key)
+        detect_locomotion_mode.detector = LocomotionInferenceEngine(api_key=api_key)
     
     return detect_locomotion_mode.detector.detect_locomotion_mode(
         gpt_description=gpt_description,
@@ -196,7 +196,7 @@ def test_simple_detection():
     print("🚀 Testing Simple Locomotion Detection")
     
     # Initialize detector
-    detector = SimpleLocomotionInference()
+    detector = LocomotionInferenceEngine()
     
     # Test cases
     test_cases = [
@@ -277,7 +277,7 @@ def example_usage():
     
     # Method 1: Using the class
     print("\n1. Using the class:")
-    detector = SimpleLocomotionInference()
+    detector = LocomotionInferenceEngine()
     
     result = detector.detect_locomotion_mode(
         voice_command="I am crouch walking",

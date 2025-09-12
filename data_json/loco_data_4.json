@@ -5,49 +5,49 @@
     "level": "ground walk"
   },
   {
-    "timestamp": "00:05:00",
+    "timestamp": "00:00:05",
     "demo_voice_command": "I am crouch walking",
     "level": "crouch walk"
   },
 
   {
-    "timestamp": "00:13:00",
+    "timestamp": "00:00:13",
     "demo_voice_command": "ending crouch walking",
     "level": "end crouch walk"
   },
   {
-    "timestamp": "00:16:00",
+    "timestamp": "00:00:16",
     "demo_voice_command": "moving forward",
     "level": "ground walk"
   },
   {
-    "timestamp": "00:19:00",
+    "timestamp": "00:00:19",
     "demo_voice_command": "crouching forward",
     "level": "crouch walk"
   },
 
   {
-    "timestamp": "00:26:00",
+    "timestamp": "00:00:26",
     "demo_voice_command": "standing up",
     "level": "end crouch walk"
   },
   {
-    "timestamp": "00:30:00",
+    "timestamp": "00:00:30",
     "demo_voice_command": "moving on",
     "level": "ground walk"
   },
   {
-    "timestamp": "00:33:00",
+    "timestamp": "00:00:33",
     "demo_voice_command": "walking",
     "level": "crouch walk"
   },
   {
-    "timestamp": "00:40:00",
+    "timestamp": "00:00:40",
     "demo_voice_command": "crouching again",
     "level": "crouch walk"
   },
   {
-    "timestamp": "00:44:00",
+    "timestamp": "00:00:44",
     "demo_voice_command": "standing up",
     "level": "end crouch walk"
   }

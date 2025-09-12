@@ -1,0 +1,637 @@
+#!/usr/bin/env python3
+"""
+Video Simulation Web App
+Real-time locomotion mode prediction simulation with scene change detection,
+GPT descriptions, live descriptions, and timing synchronization.
+"""
+
+import os
+import json
+import cv2
+import numpy as np
+import time
+import threading
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+from flask import Flask, render_template, request, jsonify, send_file
+from werkzeug.serving import make_server
+import queue
+import base64
+from pathlib import Path
+import subprocess
+import multiprocessing as mp
+from multiprocessing import Queue, Process, Manager
+
+# Import our modules
+from scene_change_detection.change_detector import SceneChangeDetector
+from gpt_scene_description.gpt_descriptor import GPTSceneDescriptor, update_gpt_description_memory
+from live_descriptor.live_descriptor import process_live_frame
+from locomotion_infer import LocomotionInferenceEngine
+
+app = Flask(__name__)
+app.secret_key = 'video_simulation_secret_key'
+
+# Global variables for shared state
+video_processor = None
+simulation_state = {
+    'is_running': False,
+    'current_video': None,
+    'current_data': None,
+    'current_frame': None,
+    'frame_count': 0,
+    'scene_changes': [],
+    'gpt_descriptions': [],
+    'live_descriptions': [],
+    'locomotion_predictions': [],
+    'current_voice_command': '',
+    'current_prediction': None,
+    'video_duration': 0,
+    'fps': 1,  # 1 FPS for extraction
+    'processing_fps': 0.5  # Every 2nd frame
+}
+
+class VideoProcessor:
+    """
+    Main video processor that handles all the simulation logic
+    """
+    
+    def __init__(self):
+        self.change_detector = None
+        self.gpt_descriptor = None
+        self.locomotion_engine = None
+        self.manager = Manager()
+        
+        # Shared data structures
+        self.shared_state = self.manager.dict()
+        self.frame_queue = Queue()
+        self.result_queue = Queue()
+        
+        # Background processes
+        self.change_detection_process = None
+        self.description_process = None
+        
+        # Memory stores
+        self.gpt_description_memory = []
+        self.live_desc_memory = []
+        
+        self.reset_state()
+    
+    def reset_state(self):
+        """Reset all processing state"""
+        self.shared_state.update({
+            'is_processing': False,
+            'frame_count': 0,
+            'scene_changes_detected': 0,
+            'current_frame_data': None
+        })
+        
+        self.gpt_description_memory = []
+        self.live_desc_memory = []
+    
+    def initialize_models(self):
+        """Initialize all AI models"""
+        try:
+            print("🚀 Initializing AI models...")
+            
+            # Initialize scene change detector
+            self.change_detector = SceneChangeDetector(
+                model_name="mobileclip",
+                similarity_threshold=0.85,
+                use_fp16=True
+            )
+            
+            # Initialize GPT descriptor
+            self.gpt_descriptor = GPTSceneDescriptor(
+                max_memory_size=10,
+                enable_context=True,
+                use_narrative_style=True
+            )
+            
+            # Initialize locomotion inference engine
+            self.locomotion_engine = LocomotionInferenceEngine()
+            
+            print("✅ All models initialized successfully")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error initializing models: {e}")
+            return False
+    
+    def extract_video_frames(self, video_path: str, fps: float = 1.0) -> List[np.ndarray]:
+        """Extract frames from video at specified FPS"""
+        frames = []
+        cap = cv2.VideoCapture(video_path)
+        
+        if not cap.isOpened():
+            raise ValueError(f"Could not open video: {video_path}")
+        
+        original_fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_interval = int(original_fps / fps)
+        
+        frame_count = 0
+        extracted_count = 0
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            if frame_count % frame_interval == 0:
+                frames.append(frame.copy())
+                extracted_count += 1
+            
+            frame_count += 1
+        
+        cap.release()
+        print(f"📹 Extracted {extracted_count} frames from {frame_count} total frames")
+        return frames
+    
+    def change_detection_worker(self, frame_queue: Queue, result_queue: Queue):
+        """Background worker for scene change detection"""
+        print("🔍 Starting change detection worker...")
+        
+        try:
+            detector = SceneChangeDetector(
+                model_name="mobileclip",
+                similarity_threshold=0.85,
+                use_fp16=True
+            )
+            
+            while True:
+                try:
+                    # Get frame from queue
+                    frame_data = frame_queue.get(timeout=1)
+                    if frame_data is None:  # Shutdown signal
+                        break
+                    
+                    frame_idx, frame = frame_data
+                    
+                    # Detect scene change
+                    is_changed, changed_frame = detector.detect_scene_change(frame)
+                    
+                    # Send result back
+                    result_queue.put({
+                        'type': 'scene_change',
+                        'frame_idx': frame_idx,
+                        'is_changed': is_changed,
+                        'changed_frame': changed_frame
+                    })
+                    
+                except queue.Empty:
+                    continue
+                except Exception as e:
+                    print(f"❌ Error in change detection: {e}")
+                    
+        except Exception as e:
+            print(f"❌ Error initializing change detection worker: {e}")
+    
+    def description_worker(self, frame_queue: Queue, result_queue: Queue):
+        """Background worker for live description"""
+        print("📝 Starting description worker...")
+        
+        live_desc_memory = []
+        
+        while True:
+            try:
+                # Get frame from queue
+                frame_data = frame_queue.get(timeout=1)
+                if frame_data is None:  # Shutdown signal
+                    break
+                
+                frame_idx, frame = frame_data
+                
+                # Process live frame description
+                updated_memory = process_live_frame(
+                    live_desc_memory, 
+                    frame,
+                    prompt="Describe this scene from a person's perspective walking in a construction site. Focus on elements that might affect locomotion."
+                )
+                
+                live_desc_memory = updated_memory
+                
+                # Send result back
+                if live_desc_memory:
+                    latest_desc = live_desc_memory[-1]
+                    result_queue.put({
+                        'type': 'live_description',
+                        'frame_idx': frame_idx,
+                        'description': latest_desc.get('description', ''),
+                        'memory_size': len(live_desc_memory)
+                    })
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"❌ Error in description worker: {e}")
+    
+    def start_background_workers(self):
+        """Start background processing workers"""
+        try:
+            # Create queues for communication
+            self.change_queue = Queue()
+            self.desc_queue = Queue()
+            self.change_result_queue = Queue()
+            self.desc_result_queue = Queue()
+            
+            # Start change detection worker
+            self.change_detection_process = Process(
+                target=self.change_detection_worker,
+                args=(self.change_queue, self.change_result_queue)
+            )
+            self.change_detection_process.start()
+            
+            # Start description worker
+            self.description_process = Process(
+                target=self.description_worker,
+                args=(self.desc_queue, self.desc_result_queue)
+            )
+            self.description_process.start()
+            
+            print("✅ Background workers started")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error starting background workers: {e}")
+            return False
+    
+    def stop_background_workers(self):
+        """Stop background processing workers"""
+        try:
+            # Send shutdown signals
+            if hasattr(self, 'change_queue'):
+                self.change_queue.put(None)
+            if hasattr(self, 'desc_queue'):
+                self.desc_queue.put(None)
+            
+            # Wait for processes to finish
+            if self.change_detection_process and self.change_detection_process.is_alive():
+                self.change_detection_process.join(timeout=5)
+                if self.change_detection_process.is_alive():
+                    self.change_detection_process.terminate()
+            
+            if self.description_process and self.description_process.is_alive():
+                self.description_process.join(timeout=5)
+                if self.description_process.is_alive():
+                    self.description_process.terminate()
+            
+            print("✅ Background workers stopped")
+            
+        except Exception as e:
+            print(f"❌ Error stopping background workers: {e}")
+    
+    def process_simulation_frame(self, frame: np.ndarray, frame_idx: int, 
+                               voice_command: str = "", previous_mode: str = "") -> Dict:
+        """Process a single frame through the simulation pipeline"""
+        result = {
+            'frame_idx': frame_idx,
+            'timestamp': datetime.now().isoformat(),
+            'scene_changed': False,
+            'gpt_description': '',
+            'live_description': '',
+            'voice_command': voice_command,
+            'locomotion_prediction': None,
+            'processing_time': 0
+        }
+        
+        start_time = time.time()
+        
+        try:
+            # Send frame to background workers (every 2nd frame)
+            if frame_idx % 2 == 0:
+                self.change_queue.put((frame_idx, frame))
+                self.desc_queue.put((frame_idx, frame))
+            
+            # Check for results from background workers
+            scene_change_result = None
+            live_desc_result = None
+            
+            # Non-blocking check for scene change result
+            try:
+                scene_change_result = self.change_result_queue.get_nowait()
+            except queue.Empty:
+                pass
+            
+            # Non-blocking check for description result
+            try:
+                live_desc_result = self.desc_result_queue.get_nowait()
+            except queue.Empty:
+                pass
+            
+            # Process scene change if detected
+            if scene_change_result and scene_change_result['is_changed']:
+                result['scene_changed'] = True
+                
+                # Generate GPT description for scene change
+                try:
+                    gpt_desc = self.gpt_descriptor.describe_scene(
+                        scene_change_result['changed_frame']
+                    )
+                    if gpt_desc:
+                        self.gpt_description_memory.append({
+                            'timestamp': datetime.now().isoformat(),
+                            'description': gpt_desc,
+                            'frame_idx': frame_idx
+                        })
+                        result['gpt_description'] = gpt_desc
+                except Exception as e:
+                    print(f"❌ Error generating GPT description: {e}")
+            
+            # Process live description
+            if live_desc_result:
+                result['live_description'] = live_desc_result['description']
+                self.live_desc_memory.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'description': live_desc_result['description'],
+                    'frame_idx': frame_idx
+                })
+            
+            # Generate locomotion prediction
+            if voice_command or result['gpt_description'] or result['live_description']:
+                try:
+                    # Get recent descriptions for context
+                    recent_gpt = self.gpt_description_memory[-1]['description'] if self.gpt_description_memory else ""
+                    recent_live = self.live_desc_memory[-1]['description'] if self.live_desc_memory else ""
+                    
+                    prediction = self.locomotion_engine.detect_locomotion_mode(
+                        gpt_description=recent_gpt,
+                        live_description=recent_live,
+                        previous_mode=previous_mode,
+                        voice_command=voice_command
+                    )
+                    
+                    result['locomotion_prediction'] = prediction
+                    
+                except Exception as e:
+                    print(f"❌ Error generating locomotion prediction: {e}")
+                    result['locomotion_prediction'] = {
+                        "mode_detected": "unknown",
+                        "confidence_score": 0.1
+                    }
+            
+            result['processing_time'] = time.time() - start_time
+            return result
+            
+        except Exception as e:
+            print(f"❌ Error processing frame {frame_idx}: {e}")
+            result['processing_time'] = time.time() - start_time
+            return result
+
+# Initialize global video processor
+video_processor = VideoProcessor()
+
+@app.route('/')
+def index():
+    """Main page with video selection and simulation controls"""
+    # Get available videos and data files
+    videos_dir = Path('/home/cmuser/ASIF/loco-simple/videos')
+    data_dir = Path('/home/cmuser/ASIF/loco-simple/data_json')
+    
+    videos = [f.name for f in videos_dir.glob('*.mp4')] if videos_dir.exists() else []
+    data_files = [f.name for f in data_dir.glob('*.json')] if data_dir.exists() else []
+    
+    return render_template('video_simulation.html', 
+                         videos=videos, 
+                         data_files=data_files,
+                         current_state=simulation_state)
+
+@app.route('/api/load_data', methods=['POST'])
+def load_data():
+    """Load video and corresponding JSON data"""
+    try:
+        data = request.get_json()
+        video_file = data.get('video_file')
+        data_file = data.get('data_file')
+        
+        if not video_file or not data_file:
+            return jsonify({'error': 'Video and data files are required'}), 400
+        
+        # Load video path
+        video_path = f'/home/cmuser/ASIF/loco-simple/videos/{video_file}'
+        if not os.path.exists(video_path):
+            return jsonify({'error': f'Video file not found: {video_file}'}), 404
+        
+        # Load JSON data
+        data_path = f'/home/cmuser/ASIF/loco-simple/data_json/{data_file}'
+        if not os.path.exists(data_path):
+            return jsonify({'error': f'Data file not found: {data_file}'}), 404
+        
+        with open(data_path, 'r') as f:
+            json_data = json.load(f)
+        
+        # Get video info
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration = frame_count / fps if fps > 0 else 0
+        cap.release()
+        
+        # Update simulation state
+        simulation_state.update({
+            'current_video': video_path,
+            'current_data': json_data,
+            'video_duration': duration,
+            'frame_count': 0,
+            'is_running': False
+        })
+        
+        return jsonify({
+            'success': True,
+            'video_info': {
+                'file': video_file,
+                'duration': duration,
+                'fps': fps,
+                'frame_count': frame_count
+            },
+            'data_info': {
+                'file': data_file,
+                'entries': len(json_data)
+            },
+            'data_entries': json_data
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/initialize_models', methods=['POST'])
+def initialize_models():
+    """Initialize AI models"""
+    try:
+        success = video_processor.initialize_models()
+        if success:
+            return jsonify({'success': True, 'message': 'Models initialized successfully'})
+        else:
+            return jsonify({'error': 'Failed to initialize models'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/start_simulation', methods=['POST'])
+def start_simulation():
+    """Start the video simulation"""
+    try:
+        if not simulation_state['current_video'] or not simulation_state['current_data']:
+            return jsonify({'error': 'Video and data must be loaded first'}), 400
+        
+        # Reset state
+        video_processor.reset_state()
+        simulation_state.update({
+            'is_running': True,
+            'frame_count': 0,
+            'scene_changes': [],
+            'gpt_descriptions': [],
+            'live_descriptions': [],
+            'locomotion_predictions': []
+        })
+        
+        # Start background workers
+        success = video_processor.start_background_workers()
+        if not success:
+            return jsonify({'error': 'Failed to start background workers'}), 500
+        
+        # Start simulation thread
+        simulation_thread = threading.Thread(target=run_simulation)
+        simulation_thread.daemon = True
+        simulation_thread.start()
+        
+        return jsonify({'success': True, 'message': 'Simulation started'})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/stop_simulation', methods=['POST'])
+def stop_simulation():
+    """Stop the video simulation"""
+    try:
+        simulation_state['is_running'] = False
+        video_processor.stop_background_workers()
+        return jsonify({'success': True, 'message': 'Simulation stopped'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/simulation_status')
+def simulation_status():
+    """Get current simulation status"""
+    try:
+        return jsonify({
+            'is_running': simulation_state['is_running'],
+            'frame_count': simulation_state['frame_count'],
+            'current_voice_command': simulation_state['current_voice_command'],
+            'current_prediction': simulation_state['current_prediction'],
+            'scene_changes_count': len(simulation_state['scene_changes']),
+            'gpt_descriptions_count': len(simulation_state['gpt_descriptions']),
+            'live_descriptions_count': len(simulation_state['live_descriptions']),
+            'current_frame_base64': simulation_state.get('current_frame_base64', '')
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def parse_timestamp(timestamp_str: str) -> float:
+    """Parse timestamp string (HH:MM:SS) to seconds"""
+    try:
+        parts = timestamp_str.split(':')
+        hours = int(parts[0])
+        minutes = int(parts[1])
+        seconds = int(parts[2])
+        return hours * 3600 + minutes * 60 + seconds
+    except:
+        return 0.0
+
+def run_simulation():
+    """Main simulation loop running in background thread"""
+    try:
+        print("🎬 Starting video simulation...")
+        
+        # Extract frames from video at 1 FPS
+        frames = video_processor.extract_video_frames(
+            simulation_state['current_video'], 
+            fps=simulation_state['fps']
+        )
+        
+        if not frames:
+            print("❌ No frames extracted from video")
+            return
+        
+        # Process each timestamp entry
+        data_entries = simulation_state['current_data']
+        previous_mode = ""
+        
+        for entry_idx, entry in enumerate(data_entries):
+            if not simulation_state['is_running']:
+                break
+            
+            # Parse timestamp and calculate frame index
+            timestamp_seconds = parse_timestamp(entry['timestamp'])
+            frame_idx = int(timestamp_seconds * simulation_state['fps'])
+            
+            # Ensure frame index is within bounds
+            if frame_idx >= len(frames):
+                continue
+            
+            # Get current frame
+            current_frame = frames[frame_idx]
+            
+            # Update simulation state
+            simulation_state.update({
+                'frame_count': frame_idx,
+                'current_voice_command': entry['demo_voice_command']
+            })
+            
+            # Encode frame for display
+            _, buffer = cv2.imencode('.jpg', current_frame)
+            frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            simulation_state['current_frame_base64'] = frame_base64
+            
+            print(f"🎯 Processing timestamp {entry['timestamp']} - Frame {frame_idx}")
+            print(f"🗣️  Voice command: {entry['demo_voice_command']}")
+            print(f"📊 Expected mode: {entry['level']}")
+            
+            # Process frame through simulation pipeline
+            result = video_processor.process_simulation_frame(
+                current_frame,
+                frame_idx,
+                voice_command=entry['demo_voice_command'],
+                previous_mode=previous_mode
+            )
+            
+            # Update simulation state with results
+            if result['scene_changed']:
+                simulation_state['scene_changes'].append(result)
+            
+            if result['gpt_description']:
+                simulation_state['gpt_descriptions'].append(result)
+            
+            if result['live_description']:
+                simulation_state['live_descriptions'].append(result)
+            
+            if result['locomotion_prediction']:
+                simulation_state['locomotion_predictions'].append(result)
+                simulation_state['current_prediction'] = result['locomotion_prediction']
+                previous_mode = result['locomotion_prediction']['mode_detected']
+                
+                print(f"🤖 Predicted: {result['locomotion_prediction']['mode_detected']} "
+                      f"(confidence: {result['locomotion_prediction']['confidence_score']:.3f})")
+            
+            # Calculate sleep time to next timestamp
+            if entry_idx + 1 < len(data_entries):
+                next_timestamp_seconds = parse_timestamp(data_entries[entry_idx + 1]['timestamp'])
+                sleep_time = next_timestamp_seconds - timestamp_seconds
+                
+                if sleep_time > 0:
+                    print(f"⏱️  Sleeping for {sleep_time:.1f} seconds...")
+                    time.sleep(sleep_time)
+        
+        print("✅ Simulation completed")
+        simulation_state['is_running'] = False
+        
+    except Exception as e:
+        print(f"❌ Error in simulation: {e}")
+        simulation_state['is_running'] = False
+    
+    finally:
+        video_processor.stop_background_workers()
+
+if __name__ == '__main__':
+    print("🚀 Starting Video Simulation App")
+    print("📁 Videos folder: /home/cmuser/ASIF/loco-simple/videos")
+    print("📁 Data folder: /home/cmuser/ASIF/loco-simple/data_json")
+    
+    app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Simulation App - Locomotion Mode Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-running { background-color: #28a745; }
+        .status-stopped { background-color: #dc3545; }
+        .status-loading { background-color: #ffc107; }
+        
+        .video-container {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .current-frame {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        
+        .prediction-card {
+            border-left: 4px solid #007bff;
+            transition: all 0.3s ease;
+        }
+        
+        .prediction-card.high-confidence {
+            border-left-color: #28a745;
+        }
+        
+        .prediction-card.medium-confidence {
+            border-left-color: #ffc107;
+        }
+        
+        .prediction-card.low-confidence {
+            border-left-color: #dc3545;
+        }
+        
+        .voice-command {
+            background: linear-gradient(45deg, #007bff, #6610f2);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .log-info { background: #d1ecf1; }
+        .log-success { background: #d4edda; }
+        .log-warning { background: #fff3cd; }
+        .log-error { background: #f8d7da; }
+        
+        .data-entry {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .data-entry.active {
+            border-color: #007bff;
+            background: #f0f8ff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Header -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">
+                            <i class="fas fa-video me-2"></i>
+                            Video Simulation App - Locomotion Mode Prediction
+                        </h2>
+                        <div class="mt-2">
+                            <span class="status-indicator" id="statusIndicator"></span>
+                            <span id="statusText">Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Left Panel - Video and Controls -->
+            <div class="col-lg-8">
+                <!-- File Selection -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-folder-open me-2"></i>File Selection</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="videoSelect" class="form-label">Select Video:</label>
+                                <select class="form-select" id="videoSelect">
+                                    <option value="">Choose video file...</option>
+                                    {% for video in videos %}
+                                    <option value="{{ video }}">{{ video }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dataSelect" class="form-label">Select Data File:</label>
+                                <select class="form-select" id="dataSelect">
+                                    <option value="">Choose data file...</option>
+                                    {% for data_file in data_files %}
+                                    <option value="{{ data_file }}">{{ data_file }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" id="loadDataBtn">
+                                <i class="fas fa-upload me-2"></i>Load Data
+                            </button>
+                            <button class="btn btn-success" id="initModelsBtn" disabled>
+                                <i class="fas fa-brain me-2"></i>Initialize AI Models
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video Display -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-play-circle me-2"></i>Video Simulation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="video-container mb-3" id="videoContainer">
+                            <div class="text-muted text-center">
+                                <i class="fas fa-video fa-3x mb-2"></i>
+                                <p>Load a video to start simulation</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Controls -->
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button class="btn btn-success" id="startSimBtn" disabled>
+                                <i class="fas fa-play me-2"></i>Start Simulation
+                            </button>
+                            <button class="btn btn-danger" id="stopSimBtn" disabled>
+                                <i class="fas fa-stop me-2"></i>Stop Simulation
+                            </button>
+                        </div>
+                        
+                        <!-- Current Voice Command -->
+                        <div class="voice-command mt-3" id="voiceCommandCard" style="display: none;">
+                            <h6><i class="fas fa-microphone me-2"></i>Current Voice Command:</h6>
+                            <p class="mb-0" id="currentVoiceCommand">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-bar me-2"></i>Processing Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="frameCount">0</div>
+                                <div class="text-muted">Frames Processed</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="sceneChanges">0</div>
+                                <div class="text-muted">Scene Changes</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="gptDescriptions">0</div>
+                                <div class="text-muted">GPT Descriptions</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="liveDescriptions">0</div>
+                                <div class="text-muted">Live Descriptions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Data and Predictions -->
+            <div class="col-lg-4">
+                <!-- Current Prediction -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-robot me-2"></i>Current Prediction</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="prediction-card" id="predictionCard" style="display: none;">
+                            <div class="p-3">
+                                <h6 class="mb-2">Locomotion Mode:</h6>
+                                <h4 class="text-primary mb-2" id="predictedMode">-</h4>
+                                <div class="mb-2">
+                                    <small class="text-muted">Confidence:</small>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill bg-success" id="confidenceFill" style="width: 0%;"></div>
+                                    </div>
+                                    <span id="confidenceText">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="noPrediction" class="text-muted text-center py-4">
+                            <i class="fas fa-clock fa-2x mb-2"></i>
+                            <p>Waiting for prediction...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Voice Commands Timeline -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list me-2"></i>Voice Commands Timeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="dataEntries" class="text-muted text-center">
+                            Load data to see timeline
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Processing Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-terminal me-2"></i>Processing Log</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" id="processingLog">
+                            <div class="log-entry log-info">Ready to start simulation...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Application state
+        let simulationRunning = false;
+        let statusCheckInterval = null;
+        let dataEntries = [];
+        let currentEntryIndex = -1;
+
+        // DOM elements
+        const videoSelect = document.getElementById('videoSelect');
+        const dataSelect = document.getElementById('dataSelect');
+        const loadDataBtn = document.getElementById('loadDataBtn');
+        const initModelsBtn = document.getElementById('initModelsBtn');
+        const startSimBtn = document.getElementById('startSimBtn');
+        const stopSimBtn = document.getElementById('stopSimBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const videoContainer = document.getElementById('videoContainer');
+        const voiceCommandCard = document.getElementById('voiceCommandCard');
+        const currentVoiceCommand = document.getElementById('currentVoiceCommand');
+        const predictionCard = document.getElementById('predictionCard');
+        const noPrediction = document.getElementById('noPrediction');
+        const predictedMode = document.getElementById('predictedMode');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const confidenceText = document.getElementById('confidenceText');
+        const frameCount = document.getElementById('frameCount');
+        const sceneChanges = document.getElementById('sceneChanges');
+        const gptDescriptions = document.getElementById('gptDescriptions');
+        const liveDescriptions = document.getElementById('liveDescriptions');
+        const dataEntriesContainer = document.getElementById('dataEntries');
+        const processingLog = document.getElementById('processingLog');
+
+        // Event listeners
+        loadDataBtn.addEventListener('click', loadData);
+        initModelsBtn.addEventListener('click', initializeModels);
+        startSimBtn.addEventListener('click', startSimulation);
+        stopSimBtn.addEventListener('click', stopSimulation);
+
+        // Functions
+        function updateStatus(status, isRunning = false) {
+            statusText.textContent = status;
+            statusIndicator.className = `status-indicator ${isRunning ? 'status-running' : 'status-stopped'}`;
+        }
+
+        function addLogEntry(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            processingLog.appendChild(logEntry);
+            processingLog.scrollTop = processingLog.scrollHeight;
+        }
+
+        async function loadData() {
+            const video = videoSelect.value;
+            const data = dataSelect.value;
+            
+            if (!video || !data) {
+                alert('Please select both video and data files');
+                return;
+            }
+            
+            try {
+                loadDataBtn.disabled = true;
+                addLogEntry(`Loading ${video} and ${data}...`);
+                
+                const response = await fetch('/api/load_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ video_file: video, data_file: data })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    dataEntries = result.data_entries;
+                    displayDataEntries(dataEntries);
+                    initModelsBtn.disabled = false;
+                    addLogEntry(`Successfully loaded ${result.data_info.entries} data entries`, 'success');
+                    updateStatus('Data loaded - Ready to initialize models');
+                } else {
+                    addLogEntry(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Network error: ${error.message}`, 'error');
+            } finally {
+                loadDataBtn.disabled = false;
+            }
+        }
+
+        async function initializeModels() {
+            try {
+                initModelsBtn.disabled = true;
+                addLogEntry('Initializing AI models...', 'warning');
+                updateStatus('Initializing models...', false);
+                statusIndicator.className = 'status-indicator status-loading';
+                
+                const response = await fetch('/api/initialize_models', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    startSimBtn.disabled = false;
+                    addLogEntry('AI models initialized successfully', 'success');
+                    updateStatus('Models ready - Ready to start simulation');
+                } else {
+                    addLogEntry(`Model initialization failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLogEntry(`Network error: ${error.message}`, 'error');
+            } finally {
+                initModelsBtn.disabled = false;
+            }
+        }
+
+        async function startSimulation() {
+            try {
+                startSimBtn.disabled = true;
+                addLogEntry('Starting simulation...', 'warning');
+                
+                const response = await fetch('/api/start_simulation', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    simulationRunning = true;
+                    stopSimBtn.disabled = false;
+                    voiceCommandCard.style.display = 'block';
+                    addLogEntry('Simulation started successfully', 'success');
+                    updateStatus('Simulation running', true);
+                    
+                    // Start status checking
+                    statusCheckInterval = setInterval(checkSimulationStatus, 1000);
+                } else {
+                    addLogEntry(`Failed to start simulation: ${result.error}`, 'error');
+                    startSimBtn.disabled = false;
+                }
+            } catch (error) {
+                addLogEntry(`Network error: ${error.message}`, 'error');
+                startSimBtn.disabled = false;
+            }
+        }
+
+        async function stopSimulation() {
+            try {
+                const response = await fetch('/api/stop_simulation', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    simulationRunning = false;
+                    startSimBtn.disabled = false;
+                    stopSimBtn.disabled = true;
+                    addLogEntry('Simulation stopped', 'warning');
+                    updateStatus('Simulation stopped');
+                    
+                    // Stop status checking
+                    if (statusCheckInterval) {
+                        clearInterval(statusCheckInterval);
+                        statusCheckInterval = null;
+                    }
+                }
+            } catch (error) {
+                addLogEntry(`Error stopping simulation: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkSimulationStatus() {
+            if (!simulationRunning) return;
+            
+            try {
+                const response = await fetch('/api/simulation_status');
+                const status = await response.json();
+                
+                if (status.error) {
+                    addLogEntry(`Status error: ${status.error}`, 'error');
+                    return;
+                }
+                
+                // Update statistics
+                frameCount.textContent = status.frame_count;
+                sceneChanges.textContent = status.scene_changes_count;
+                gptDescriptions.textContent = status.gpt_descriptions_count;
+                liveDescriptions.textContent = status.live_descriptions_count;
+                
+                // Update voice command
+                if (status.current_voice_command) {
+                    currentVoiceCommand.textContent = status.current_voice_command;
+                }
+                
+                // Update current frame
+                if (status.current_frame_base64) {
+                    videoContainer.innerHTML = `<img src="data:image/jpeg;base64,${status.current_frame_base64}" class="current-frame" alt="Current frame">`;
+                }
+                
+                // Update prediction
+                if (status.current_prediction) {
+                    updatePrediction(status.current_prediction);
+                }
+                
+                // Update data entries highlight
+                highlightCurrentEntry(status.current_voice_command);
+                
+                // Check if simulation ended
+                if (!status.is_running && simulationRunning) {
+                    simulationRunning = false;
+                    startSimBtn.disabled = false;
+                    stopSimBtn.disabled = true;
+                    addLogEntry('Simulation completed', 'success');
+                    updateStatus('Simulation completed');
+                    
+                    if (statusCheckInterval) {
+                        clearInterval(statusCheckInterval);
+                        statusCheckInterval = null;
+                    }
+                }
+                
+            } catch (error) {
+                addLogEntry(`Status check error: ${error.message}`, 'error');
+            }
+        }
+
+        function updatePrediction(prediction) {
+            if (!prediction) return;
+            
+            predictionCard.style.display = 'block';
+            noPrediction.style.display = 'none';
+            
+            predictedMode.textContent = prediction.mode_detected;
+            
+            const confidence = prediction.confidence_score * 100;
+            confidenceText.textContent = `${confidence.toFixed(1)}%`;
+            confidenceFill.style.width = `${confidence}%`;
+            
+            // Update confidence bar color and card styling
+            let confidenceClass = 'low-confidence';
+            let fillClass = 'bg-danger';
+            
+            if (confidence >= 70) {
+                confidenceClass = 'high-confidence';
+                fillClass = 'bg-success';
+            } else if (confidence >= 40) {
+                confidenceClass = 'medium-confidence';
+                fillClass = 'bg-warning';
+            }
+            
+            predictionCard.className = `prediction-card ${confidenceClass}`;
+            confidenceFill.className = `confidence-fill ${fillClass}`;
+        }
+
+        function displayDataEntries(entries) {
+            if (!entries || entries.length === 0) {
+                dataEntriesContainer.innerHTML = '<div class="text-muted text-center">No data entries found</div>';
+                return;
+            }
+            
+            const entriesHtml = entries.map((entry, index) => `
+                <div class="data-entry" data-index="${index}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <small class="text-muted">${entry.timestamp}</small>
+                            <div class="fw-bold">${entry.demo_voice_command}</div>
+                            <small class="badge bg-secondary">${entry.level}</small>
+                        </div>
+                        <i class="fas fa-clock text-muted"></i>
+                    </div>
+                </div>
+            `).join('');
+            
+            dataEntriesContainer.innerHTML = entriesHtml;
+        }
+
+        function highlightCurrentEntry(currentCommand) {
+            if (!currentCommand) return;
+            
+            // Remove all active classes
+            document.querySelectorAll('.data-entry').forEach(entry => {
+                entry.classList.remove('active');
+            });
+            
+            // Find and highlight current entry
+            const entries = document.querySelectorAll('.data-entry');
+            entries.forEach(entry => {
+                const commandText = entry.querySelector('.fw-bold').textContent;
+                if (commandText === currentCommand) {
+                    entry.classList.add('active');
+                    entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // Initialize status
+        updateStatus('Ready');
+    </script>
+</body>
+</html>
