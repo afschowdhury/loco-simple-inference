@@ -157,6 +157,16 @@
             color: #6c757d;
         }
         
+        .latency-info {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .latency-good { color: #28a745; }
+        .latency-ok { color: #ffc107; }
+        .latency-bad { color: #dc3545; }
+        
         .accuracy-indicator {
             display: inline-block;
             width: 12px;
@@ -296,6 +306,14 @@
                                 <div class="stat-number text-primary" id="accuracyPercentage">0%</div>
                                 <div class="text-muted">Accuracy</div>
                             </div>
+                            <div class="stat-card">
+                                <div class="stat-number text-warning" id="avgLatency">0.0s</div>
+                                <div class="text-muted">Avg API Latency</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number text-info" id="realtimeFactor">0.0x</div>
+                                <div class="text-muted">Real-time Factor</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -390,6 +408,8 @@
         const totalPredictions = document.getElementById('totalPredictions');
         const correctPredictions = document.getElementById('correctPredictions');
         const accuracyPercentage = document.getElementById('accuracyPercentage');
+        const avgLatency = document.getElementById('avgLatency');
+        const realtimeFactor = document.getElementById('realtimeFactor');
         const dataEntriesContainer = document.getElementById('dataEntries');
         const processingLog = document.getElementById('processingLog');
 
@@ -558,6 +578,21 @@
                     accuracyPercentage.textContent = status.prediction_accuracy.percentage + '%';
                 }
                 
+                // Update latency statistics
+                if (status.latency_stats) {
+                    avgLatency.textContent = status.latency_stats.avg_latency + 's';
+                    realtimeFactor.textContent = status.latency_stats.realtime_factor + 'x';
+                    
+                    // Color code real-time factor
+                    if (status.latency_stats.realtime_factor <= 1.0) {
+                        realtimeFactor.className = 'stat-number text-success'; // Green for real-time or faster
+                    } else if (status.latency_stats.realtime_factor <= 2.0) {
+                        realtimeFactor.className = 'stat-number text-warning'; // Yellow for acceptable lag
+                    } else {
+                        realtimeFactor.className = 'stat-number text-danger'; // Red for significant lag
+                    }
+                }
+                
                 // Update voice command
                 if (status.current_voice_command) {
                     currentVoiceCommand.textContent = status.current_voice_command;
@@ -572,10 +607,40 @@
                 if (status.current_prediction) {
                     updatePrediction(status.current_prediction);
                     
-                    // Update timeline with prediction (find matching timestamp)
-                    const currentEntry = dataEntries.find(entry => entry.demo_voice_command === status.current_voice_command);
-                    if (currentEntry) {
-                        updateTimelinePrediction(currentEntry.timestamp, status.current_prediction, currentEntry.level);
+                    // Update timeline with prediction - try multiple approaches to find the matching entry
+                    let matchingEntry = null;
+                    
+                    // First try to match by current voice command
+                    if (status.current_voice_command) {
+                        matchingEntry = dataEntries.find(entry => entry.demo_voice_command === status.current_voice_command);
+                    }
+                    
+                    // If no match by voice command, try to find by frame timing
+                    if (!matchingEntry && status.frame_count >= 0) {
+                        // Calculate expected timestamp from frame count
+                        const expectedTimestamp = formatSecondsToTimestamp(status.frame_count);
+                        matchingEntry = dataEntries.find(entry => entry.timestamp === expectedTimestamp);
+                        
+                        // If still no exact match, find the closest timestamp
+                        if (!matchingEntry) {
+                            matchingEntry = findClosestTimestampEntry(status.frame_count, dataEntries);
+                        }
+                    }
+                    
+                    if (matchingEntry) {
+                        // Get latency and processing time from the prediction result if available
+                        let latency = null;
+                        let processingTime = null;
+                        
+                        // Get API latency from current prediction if available
+                        let apiLatency = null;
+                        if (status.current_prediction && status.current_prediction.api_latency) {
+                            apiLatency = status.current_prediction.api_latency;
+                        } else if (status.latency_stats && status.latency_stats.avg_latency > 0) {
+                            apiLatency = status.latency_stats.avg_latency;
+                        }
+                        
+                        updateTimelinePrediction(matchingEntry.timestamp, status.current_prediction, matchingEntry.level, apiLatency, processingTime);
                     }
                 }
                 
@@ -589,6 +654,9 @@
                     stopSimBtn.disabled = true;
                     addLogEntry('Simulation completed', 'success');
                     updateStatus('Simulation completed');
+                    
+                    // Final update of timeline predictions for any missed entries
+                    updateAllTimelinePredictions(status);
                     
                     if (statusCheckInterval) {
                         clearInterval(statusCheckInterval);
@@ -655,6 +723,10 @@
                                 <span class="confidence-mini">(<span class="confidence-value">0</span>% confidence)</span>
                             </div>
                         </div>
+                        <div class="latency-info">
+                            <i class="fas fa-clock"></i> API Latency: <span class="api-latency-value">0.0s</span>
+                            | Processing: <span class="processing-time">0.0s</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -662,7 +734,7 @@
             dataEntriesContainer.innerHTML = entriesHtml;
         }
 
-        function updateTimelinePrediction(timestamp, prediction, actualLevel) {
+        function updateTimelinePrediction(timestamp, prediction, actualLevel, apiLatency = null, processingTime = null) {
             // Find the entry with matching timestamp
             const entries = document.querySelectorAll('.data-entry');
             entries.forEach(entry => {
@@ -678,6 +750,25 @@
                         predictionDiv.querySelector('.predicted-mode').textContent = prediction.mode_detected;
                         predictionDiv.querySelector('.confidence-value').textContent = (prediction.confidence_score * 100).toFixed(1);
                         
+                        // Update API latency information if available
+                        if (apiLatency !== null) {
+                            const apiLatencySpan = predictionDiv.querySelector('.api-latency-value');
+                            const processingTimeSpan = predictionDiv.querySelector('.processing-time');
+                            
+                            apiLatencySpan.textContent = apiLatency.toFixed(3) + 's';
+                            processingTimeSpan.textContent = (processingTime || 0).toFixed(2) + 's';
+                            
+                            // Color code API latency (OpenAI response time)
+                            let latencyClass = 'latency-good';
+                            if (apiLatency > 1.0) {
+                                latencyClass = 'latency-bad';  // > 1s is slow for real-time
+                            } else if (apiLatency > 0.5) {
+                                latencyClass = 'latency-ok';   // 0.5-1s is acceptable
+                            }
+                            // < 0.5s is excellent for real-time
+                            apiLatencySpan.className = `api-latency-value ${latencyClass}`;
+                        }
+                        
                         // Determine if prediction is correct
                         const isCorrect = prediction.mode_detected.toLowerCase() === actualLevel.toLowerCase();
                         
@@ -688,6 +779,58 @@
                     }
                 }
             });
+        }
+
+        function formatSecondsToTimestamp(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function findClosestTimestampEntry(frameCount, entries) {
+            let closestEntry = null;
+            let minDifference = Infinity;
+            
+            entries.forEach(entry => {
+                const entrySeconds = parseTimestampToSeconds(entry.timestamp);
+                const difference = Math.abs(entrySeconds - frameCount);
+                
+                if (difference < minDifference && difference <= 3) { // Within 3 seconds
+                    minDifference = difference;
+                    closestEntry = entry;
+                }
+            });
+            
+            return closestEntry;
+        }
+
+        function parseTimestampToSeconds(timestamp) {
+            const parts = timestamp.split(':');
+            return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+        }
+
+        function updateAllTimelinePredictions(status) {
+            // Try to update any remaining timeline entries that might have been missed
+            if (status.current_prediction) {
+                // Look for any timeline entries that don't have predictions yet
+                const entries = document.querySelectorAll('.data-entry');
+                entries.forEach((entry, index) => {
+                    const predictionDiv = document.getElementById(`prediction-${index}`);
+                    if (predictionDiv && predictionDiv.style.display === 'none') {
+                        // This entry doesn't have a prediction yet, check if it should
+                        const timestamp = entry.getAttribute('data-timestamp');
+                        const timestampSeconds = parseTimestampToSeconds(timestamp);
+                        
+                        // If this timestamp is close to the current frame, use the current prediction
+                        if (Math.abs(timestampSeconds - status.frame_count) <= 2) {
+                            const actualLevel = entry.querySelector('.badge').textContent;
+                            let apiLatency = status.latency_stats && status.latency_stats.avg_latency > 0 ? status.latency_stats.avg_latency : null;
+                            updateTimelinePrediction(timestamp, status.current_prediction, actualLevel, apiLatency);
+                        }
+                    }
+                });
+            }
         }
 
         function highlightCurrentEntry(currentCommand) {

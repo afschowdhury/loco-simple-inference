@@ -14,7 +14,7 @@ from pathlib import Path
 
 def process_live_frame(live_desc_memory: List[Dict], frame: Union[np.ndarray, str], 
                       ollama_url: str = "http://localhost:11434",
-                      prompt: str = "Describe this image in a short sentence.") -> List[Dict]:
+                      prompt: str = "Describe this image shortly so that it is useful for locomotion mode prediction.") -> List[Dict]:
     """
     Process a live frame with Moondream via Ollama and add description to memory.
     

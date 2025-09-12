@@ -54,6 +54,12 @@ simulation_state = {
     "fps": 1,  # 1 FPS for extraction
     "processing_fps": 0.5,  # Every 2nd frame
     "prediction_accuracy": {"total": 0, "correct": 0, "percentage": 0},
+    "latency_stats": {
+        "avg_latency": 0,
+        "max_latency": 0,
+        "min_latency": 0,
+        "realtime_factor": 0,
+    },
 }
 
 
@@ -297,6 +303,7 @@ class VideoProcessor:
         frame_idx: int,
         voice_command: str = "",
         previous_mode: str = "",
+        video_start_time: float = None,
     ) -> Dict:
         """Process a single frame through the simulation pipeline"""
         result = {
@@ -308,9 +315,12 @@ class VideoProcessor:
             "voice_command": voice_command,
             "locomotion_prediction": None,
             "processing_time": 0,
+            "video_timestamp": frame_idx,  # Video time in seconds
+            "latency": 0,  # Time difference between video time and processing time
         }
 
         start_time = time.time()
+        video_start_time = video_start_time or start_time
 
         try:
             # Send frame to background workers (every 2nd frame)
@@ -366,8 +376,8 @@ class VideoProcessor:
                     }
                 )
 
-            # Generate locomotion prediction
-            if voice_command or result["gpt_description"] or result["live_description"]:
+            # Generate locomotion prediction (only when there's a voice command)
+            if voice_command:
                 try:
                     # Get recent descriptions for context
                     recent_gpt = (
@@ -390,6 +400,13 @@ class VideoProcessor:
 
                     result["locomotion_prediction"] = prediction
 
+                    # Extract API latency if available
+                    if "api_latency" in prediction:
+                        result["api_latency"] = prediction["api_latency"]
+                        print(
+                            f"⚡ OpenAI API latency: {prediction['api_latency']:.3f}s"
+                        )
+
                 except Exception as e:
                     print(f"❌ Error generating locomotion prediction: {e}")
                     result["locomotion_prediction"] = {
@@ -397,12 +414,24 @@ class VideoProcessor:
                         "confidence_score": 0.1,
                     }
 
-            result["processing_time"] = time.time() - start_time
+            # Calculate latency metrics
+            end_time = time.time()
+            result["processing_time"] = end_time - start_time
+
+            # Calculate latency: how much time has passed in real processing vs video time
+            elapsed_real_time = end_time - video_start_time
+            video_time_expected = frame_idx  # Since we're processing at 1 FPS
+            result["latency"] = elapsed_real_time - video_time_expected
+
             return result
 
         except Exception as e:
             print(f"❌ Error processing frame {frame_idx}: {e}")
-            result["processing_time"] = time.time() - start_time
+            end_time = time.time()
+            result["processing_time"] = end_time - start_time
+            elapsed_real_time = end_time - video_start_time
+            video_time_expected = frame_idx
+            result["latency"] = elapsed_real_time - video_time_expected
             return result
 
 
@@ -524,6 +553,12 @@ def start_simulation():
                 "live_descriptions": [],
                 "locomotion_predictions": [],
                 "prediction_accuracy": {"total": 0, "correct": 0, "percentage": 0},
+                "latency_stats": {
+                    "avg_latency": 0,
+                    "max_latency": 0,
+                    "min_latency": 0,
+                    "realtime_factor": 0,
+                },
             }
         )
 
@@ -568,6 +603,7 @@ def simulation_status():
                 "gpt_descriptions_count": len(simulation_state["gpt_descriptions"]),
                 "live_descriptions_count": len(simulation_state["live_descriptions"]),
                 "prediction_accuracy": simulation_state["prediction_accuracy"],
+                "latency_stats": simulation_state["latency_stats"],
                 "current_frame_base64": simulation_state.get(
                     "current_frame_base64", ""
                 ),
@@ -582,15 +618,22 @@ def calculate_prediction_accuracy(predictions, data_entries):
     if not predictions or not data_entries:
         return {"total": 0, "correct": 0, "percentage": 0}
 
-    # Create a lookup map for expected levels by timestamp
+    # Create a lookup map for expected levels by timestamp with tolerance
     expected_levels = {}
     for entry in data_entries:
         timestamp_seconds = parse_timestamp(entry["timestamp"])
         frame_idx = int(timestamp_seconds * simulation_state["fps"])
         expected_levels[frame_idx] = entry["level"]
+        # Also add nearby frames (±2 seconds tolerance)
+        for offset in range(-2, 3):
+            if frame_idx + offset >= 0:
+                expected_levels[frame_idx + offset] = entry["level"]
 
     total_predictions = 0
     correct_predictions = 0
+
+    print(f"🔍 Calculating accuracy for {len(predictions)} predictions")
+    print(f"📋 Expected levels map: {expected_levels}")
 
     for prediction_result in predictions:
         if prediction_result.get("locomotion_prediction"):
@@ -600,19 +643,84 @@ def calculate_prediction_accuracy(predictions, data_entries):
             if frame_idx in expected_levels:
                 total_predictions += 1
                 expected_level = expected_levels[frame_idx]
+                is_correct = predicted_mode.lower() == expected_level.lower()
 
-                # Compare predicted mode with expected level (case insensitive)
-                if predicted_mode.lower() == expected_level.lower():
+                print(
+                    f"🎯 Frame {frame_idx}: Predicted '{predicted_mode}' vs Expected '{expected_level}' = {'✅' if is_correct else '❌'}"
+                )
+
+                if is_correct:
                     correct_predictions += 1
+            else:
+                print(f"⚠️ No expected level found for frame {frame_idx}")
 
     percentage = (
         (correct_predictions / total_predictions * 100) if total_predictions > 0 else 0
+    )
+
+    print(
+        f"📊 Final accuracy: {correct_predictions}/{total_predictions} = {percentage:.1f}%"
     )
 
     return {
         "total": total_predictions,
         "correct": correct_predictions,
         "percentage": round(percentage, 1),
+    }
+
+
+def calculate_latency_stats(predictions):
+    """Calculate OpenAI API latency statistics from prediction results"""
+    if not predictions:
+        return {
+            "avg_latency": 0,
+            "max_latency": 0,
+            "min_latency": 0,
+            "realtime_factor": 0,
+        }
+
+    api_latencies = []
+    processing_times = []
+
+    for prediction_result in predictions:
+        # Use API latency if available, otherwise fall back to processing time
+        if "api_latency" in prediction_result:
+            api_latencies.append(prediction_result["api_latency"])
+        elif "processing_time" in prediction_result:
+            processing_times.append(prediction_result["processing_time"])
+
+    # Prefer API latencies over processing times
+    latencies = api_latencies if api_latencies else processing_times
+
+    if not latencies:
+        return {
+            "avg_latency": 0,
+            "max_latency": 0,
+            "min_latency": 0,
+            "realtime_factor": 0,
+        }
+
+    avg_latency = sum(latencies) / len(latencies)
+    max_latency = max(latencies)
+    min_latency = min(latencies)
+
+    # Calculate real-time factor based on API response time:
+    # - < 0.5s = Excellent for real-time
+    # - 0.5-1.0s = Good for real-time
+    # - > 1.0s = Too slow for real-time
+    # Real-time factor: how much slower than ideal (0.5s target)
+    realtime_factor = avg_latency / 0.5  # 0.5 second target for real-time
+
+    latency_type = "API" if api_latencies else "Processing"
+    print(
+        f"📊 {latency_type} Latency Stats: Avg={avg_latency:.3f}s, Max={max_latency:.3f}s, Min={min_latency:.3f}s, RT Factor={realtime_factor:.2f}x"
+    )
+
+    return {
+        "avg_latency": round(avg_latency, 3),
+        "max_latency": round(max_latency, 3),
+        "min_latency": round(min_latency, 3),
+        "realtime_factor": round(realtime_factor, 2),
     }
 
 
@@ -645,6 +753,9 @@ def run_simulation():
         # Get data entries for reference
         data_entries = simulation_state["current_data"]
         previous_mode = ""
+
+        # Track video start time for latency calculation
+        video_start_time = time.time()
 
         # Create a lookup map for timestamp-based data
         timestamp_data_map = {}
@@ -689,6 +800,7 @@ def run_simulation():
                 frame_idx,
                 voice_command=current_voice_command,
                 previous_mode=previous_mode,
+                video_start_time=video_start_time,
             )
 
             # Update simulation state with results
@@ -716,10 +828,28 @@ def run_simulation():
                     simulation_state["locomotion_predictions"], data_entries
                 )
 
+                # Update latency statistics
+                simulation_state["latency_stats"] = calculate_latency_stats(
+                    simulation_state["locomotion_predictions"]
+                )
+
             # Sleep for 1 second to maintain 1 FPS display rate
             time.sleep(1.0)
 
         print("✅ Simulation completed")
+
+        # Final accuracy calculation
+        print("🔄 Calculating final accuracy...")
+        simulation_state["prediction_accuracy"] = calculate_prediction_accuracy(
+            simulation_state["locomotion_predictions"], data_entries
+        )
+
+        # Final latency calculation
+        print("🔄 Calculating final latency stats...")
+        simulation_state["latency_stats"] = calculate_latency_stats(
+            simulation_state["locomotion_predictions"]
+        )
+
         simulation_state["is_running"] = False
 
     except Exception as e:
