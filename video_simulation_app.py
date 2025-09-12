@@ -217,7 +217,7 @@ class VideoProcessor:
                 updated_memory = process_live_frame(
                     live_desc_memory,
                     frame,
-                    prompt="Describe this scene from a person's perspective walking in a construction site. Focus on elements that might affect locomotion.",
+                    prompt="Describe this image shortly so that it is useful for locomotion mode prediction.",
                 )
 
                 live_desc_memory = updated_memory
