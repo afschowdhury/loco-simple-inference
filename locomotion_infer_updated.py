@@ -74,7 +74,9 @@ class LocomotionInferenceEngine:
             if previous_mode:
                 # Handle multiple previous modes
                 if "," in previous_mode:
-                    context_parts.append(f"Previous modes (recent to old): {previous_mode}")
+                    context_parts.append(
+                        f"Previous modes (recent to old): {previous_mode}"
+                    )
                 else:
                     context_parts.append(f"Previous mode: {previous_mode}")
 
@@ -84,7 +86,9 @@ class LocomotionInferenceEngine:
             if live_description:
                 # Handle multiple live descriptions
                 if "\n" in live_description:
-                    context_parts.append(f"Recent scene descriptions:\n{live_description}")
+                    context_parts.append(
+                        f"Recent scene descriptions:\n{live_description}"
+                    )
                 else:
                     context_parts.append(f"Live description: {live_description}")
 
@@ -121,15 +125,15 @@ Available modes: {', '.join(self.locomotion_modes)}
 """
 
             # Print prompt to terminal for debugging
-            print("\n" + "="*80)
+            print("\n" + "=" * 80)
             print("🤖 OPENAI PROMPT FOR LOCOMOTION PREDICTION")
-            print("="*80)
+            print("=" * 80)
             print("🎯 SYSTEM PROMPT:")
             print(system_prompt)
             print("\n📝 USER PROMPT:")
             print(user_prompt)
-            print("="*80)
-            
+            print("=" * 80)
+
             # Make API call with latency tracking
             api_start_time = time.time()
             response = self.client.chat.completions.create(
@@ -143,12 +147,12 @@ Available modes: {', '.join(self.locomotion_modes)}
                 response_format={"type": "json_object"},
             )
             api_latency = time.time() - api_start_time
-            
+
             # Print response for debugging
             print("\n🔄 OPENAI RESPONSE:")
             print(f"Raw response: {response.choices[0].message.content}")
             print(f"⚡ API Latency: {api_latency:.3f}s")
-            print("="*80 + "\n")
+            print("=" * 80 + "\n")
 
             # Parse response
             result = json.loads(response.choices[0].message.content)
@@ -205,7 +209,9 @@ Available modes: {', '.join(self.locomotion_modes)}
 
             # Ultimate fallback
             return {
-                "mode_detected": previous_mode.split(",")[-1].strip() if previous_mode else "unknown",
+                "mode_detected": (
+                    previous_mode.split(",")[-1].strip() if previous_mode else "unknown"
+                ),
                 "confidence_score": 0.2,
                 "api_latency": 0.0,
             }

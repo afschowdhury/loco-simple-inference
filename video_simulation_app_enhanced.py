@@ -87,11 +87,13 @@ class VideoProcessor:
         # Memory stores
         self.gpt_description_memory = []
         self.live_desc_memory = []
-        
+
         # Context windows for richer predictions
-        self.collected_live_descriptions = []  # All live descriptions from every 2nd frame
-        self.previous_modes_history = []       # History of previous locomotion modes
-        self.max_context_size = 3              # Maximum context items to keep
+        self.collected_live_descriptions = (
+            []
+        )  # All live descriptions from every 2nd frame
+        self.previous_modes_history = []  # History of previous locomotion modes
+        self.max_context_size = 3  # Maximum context items to keep
 
         self.reset_state()
 
@@ -115,20 +117,20 @@ class VideoProcessor:
         """Get live description immediately for current frame (synchronous)"""
         try:
             print(f"🎯 Getting immediate live description for current frame...")
-            
+
             # Process frame immediately
             updated_memory = process_live_frame(
                 [],  # Empty memory for immediate processing
                 frame,
-                prompt="Describe this scene from a person's perspective walking in a construction site. Focus on elements that might affect locomotion mode."
+                prompt="Describe this scene from a person's perspective walking in a construction site. Focus on elements that might affect locomotion mode.",
             )
-            
+
             if updated_memory:
                 description = updated_memory[-1].get("description", "")
                 print(f"✅ Immediate description: {description[:80]}...")
                 return description
             return ""
-            
+
         except Exception as e:
             print(f"❌ Error getting immediate description: {e}")
             return ""
@@ -451,7 +453,7 @@ class VideoProcessor:
                 try:
                     # Get immediate live description for this specific frame
                     immediate_description = self.get_immediate_live_description(frame)
-                    
+
                     # Prepare context from recent descriptions + immediate
                     live_context = []
                     if recent_descriptions:
@@ -462,7 +464,9 @@ class VideoProcessor:
 
                     # Add immediate description as most recent
                     if immediate_description:
-                        live_context.append(f"Frame {frame_idx} (current): {immediate_description}")
+                        live_context.append(
+                            f"Frame {frame_idx} (current): {immediate_description}"
+                        )
 
                     # Prepare previous modes context
                     modes_context = ", ".join(recent_modes) if recent_modes else ""
@@ -475,7 +479,9 @@ class VideoProcessor:
                     )
                     recent_live = "\n".join(live_context) if live_context else ""
 
-                    print(f"🎯 Making prediction with {len(live_context)} descriptions (including immediate)")
+                    print(
+                        f"🎯 Making prediction with {len(live_context)} descriptions (including immediate)"
+                    )
                     if live_context:
                         print(f"📋 Context preview: {live_context[-1][:100]}...")
 
@@ -967,4 +973,3 @@ if __name__ == "__main__":
     print("📁 Data folder: /home/cmuser/ASIF/loco-simple/data_json")
 
     app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
-

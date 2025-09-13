@@ -3,7 +3,6 @@
 Video Simulation Web App
 Real-time locomotion mode prediction simulation with scene change detection,
 GPT descriptions, live descriptions, and timing synchronization.
-Enhanced with immediate live description processing for voice commands.
 """
 
 import base64
@@ -111,28 +110,6 @@ class VideoProcessor:
         self.collected_live_descriptions = []
         self.previous_modes_history = []
 
-    def get_immediate_live_description(self, frame):
-        """Get live description immediately for current frame (synchronous)"""
-        try:
-            print(f"🎯 Getting immediate live description for current frame...")
-            
-            # Process frame immediately
-            updated_memory = process_live_frame(
-                [],  # Empty memory for immediate processing
-                frame,
-                prompt="Describe this scene from a person's perspective walking in a construction site. Focus on elements that might affect locomotion mode."
-            )
-            
-            if updated_memory:
-                description = updated_memory[-1].get("description", "")
-                print(f"✅ Immediate description: {description[:80]}...")
-                return description
-            return ""
-            
-        except Exception as e:
-            print(f"❌ Error getting immediate description: {e}")
-            return ""
-
     def collect_background_results(self):
         """Continuously collect results from background workers"""
         # Collect all available live description results
@@ -140,29 +117,24 @@ class VideoProcessor:
         while True:
             try:
                 live_desc_result = self.desc_result_queue.get_nowait()
-                if (
-                    live_desc_result
-                    and live_desc_result.get("type") == "live_description"
-                ):
+                if live_desc_result and live_desc_result.get("type") == "live_description":
                     # Add to our collected descriptions
                     desc_entry = {
                         "frame_idx": live_desc_result["frame_idx"],
                         "description": live_desc_result["description"],
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now().isoformat()
                     }
                     self.collected_live_descriptions.append(desc_entry)
-
+                    
                     # Also add to simulation state for UI display
                     simulation_state["live_descriptions"].append(desc_entry)
-
+                    
                     collected_count += 1
-                    print(
-                        f"📝 Collected live description for frame {live_desc_result['frame_idx']}: {live_desc_result['description'][:50]}..."
-                    )
-
+                    print(f"📝 Collected live description for frame {live_desc_result['frame_idx']}: {live_desc_result['description'][:50]}...")
+                    
             except queue.Empty:
                 break
-
+        
         # Collect scene change results too
         scene_change_result = None
         while True:
@@ -173,25 +145,17 @@ class VideoProcessor:
                     break
             except queue.Empty:
                 break
-
+        
         return scene_change_result
 
     def get_recent_context(self):
         """Get the 3 most recent live descriptions and previous modes"""
         # Get up to 3 most recent live descriptions
-        recent_descriptions = (
-            self.collected_live_descriptions[-self.max_context_size :]
-            if self.collected_live_descriptions
-            else []
-        )
-
+        recent_descriptions = self.collected_live_descriptions[-self.max_context_size:] if self.collected_live_descriptions else []
+        
         # Get up to 3 most recent previous modes
-        recent_modes = (
-            self.previous_modes_history[-self.max_context_size :]
-            if self.previous_modes_history
-            else []
-        )
-
+        recent_modes = self.previous_modes_history[-self.max_context_size:] if self.previous_modes_history else []
+        
         return recent_descriptions, recent_modes
 
     def initialize_models(self):
@@ -421,7 +385,7 @@ class VideoProcessor:
 
             # Collect ALL available results from background workers
             scene_change_result = self.collect_background_results()
-
+            
             # Get recent context for predictions
             recent_descriptions, recent_modes = self.get_recent_context()
 
@@ -449,24 +413,15 @@ class VideoProcessor:
             # Generate locomotion prediction (only when there's a voice command)
             if voice_command:
                 try:
-                    # Get immediate live description for this specific frame
-                    immediate_description = self.get_immediate_live_description(frame)
-                    
-                    # Prepare context from recent descriptions + immediate
+                    # Prepare context from recent descriptions
                     live_context = []
                     if recent_descriptions:
                         for desc in recent_descriptions:
-                            live_context.append(
-                                f"Frame {desc['frame_idx']}: {desc['description']}"
-                            )
-
-                    # Add immediate description as most recent
-                    if immediate_description:
-                        live_context.append(f"Frame {frame_idx} (current): {immediate_description}")
-
+                            live_context.append(f"Frame {desc['frame_idx']}: {desc['description']}")
+                    
                     # Prepare previous modes context
                     modes_context = ", ".join(recent_modes) if recent_modes else ""
-
+                    
                     # Get most recent single descriptions for compatibility
                     recent_gpt = (
                         self.gpt_description_memory[-1]["description"]
@@ -474,11 +429,7 @@ class VideoProcessor:
                         else ""
                     )
                     recent_live = "\n".join(live_context) if live_context else ""
-
-                    print(f"🎯 Making prediction with {len(live_context)} descriptions (including immediate)")
-                    if live_context:
-                        print(f"📋 Context preview: {live_context[-1][:100]}...")
-
+                    
                     prediction = self.locomotion_engine.detect_locomotion_mode(
                         gpt_description=recent_gpt,
                         live_description=recent_live,
@@ -487,26 +438,20 @@ class VideoProcessor:
                     )
 
                     result["locomotion_prediction"] = prediction
-
+                    
                     # Extract API latency if available
                     if "api_latency" in prediction:
                         result["api_latency"] = prediction["api_latency"]
-                        print(
-                            f"⚡ OpenAI API latency: {prediction['api_latency']:.3f}s"
-                        )
-
+                        print(f"⚡ OpenAI API latency: {prediction['api_latency']:.3f}s")
+                    
                     # Update previous modes history
                     detected_mode = prediction.get("mode_detected", "unknown")
                     self.previous_modes_history.append(detected_mode)
                     # Keep only recent modes
                     if len(self.previous_modes_history) > self.max_context_size:
-                        self.previous_modes_history = self.previous_modes_history[
-                            -self.max_context_size :
-                        ]
-
-                    print(
-                        f"🤖 Predicted: {detected_mode} using {len(live_context)} descriptions and {len(recent_modes)} previous modes"
-                    )
+                        self.previous_modes_history = self.previous_modes_history[-self.max_context_size:]
+                    
+                    print(f"🤖 Predicted: {detected_mode} using {len(live_context)} descriptions and {len(recent_modes)} previous modes")
 
                 except Exception as e:
                     print(f"❌ Error generating locomotion prediction: {e}")
@@ -733,7 +678,7 @@ def calculate_prediction_accuracy(predictions, data_entries):
 
     total_predictions = 0
     correct_predictions = 0
-
+    
     print(f"🔍 Calculating accuracy for {len(predictions)} predictions")
     print(f"📋 Expected levels map: {expected_levels}")
 
@@ -746,10 +691,8 @@ def calculate_prediction_accuracy(predictions, data_entries):
                 total_predictions += 1
                 expected_level = expected_levels[frame_idx]
                 is_correct = predicted_mode.lower() == expected_level.lower()
-
-                print(
-                    f"🎯 Frame {frame_idx}: Predicted '{predicted_mode}' vs Expected '{expected_level}' = {'✅' if is_correct else '❌'}"
-                )
+                
+                print(f"🎯 Frame {frame_idx}: Predicted '{predicted_mode}' vs Expected '{expected_level}' = {'✅' if is_correct else '❌'}")
 
                 if is_correct:
                     correct_predictions += 1
@@ -759,10 +702,8 @@ def calculate_prediction_accuracy(predictions, data_entries):
     percentage = (
         (correct_predictions / total_predictions * 100) if total_predictions > 0 else 0
     )
-
-    print(
-        f"📊 Final accuracy: {correct_predictions}/{total_predictions} = {percentage:.1f}%"
-    )
+    
+    print(f"📊 Final accuracy: {correct_predictions}/{total_predictions} = {percentage:.1f}%")
 
     return {
         "total": total_predictions,
@@ -793,7 +734,7 @@ def calculate_latency_stats(predictions):
 
     # Prefer API latencies over processing times
     latencies = api_latencies if api_latencies else processing_times
-
+    
     if not latencies:
         return {
             "avg_latency": 0,
@@ -967,4 +908,3 @@ if __name__ == "__main__":
     print("📁 Data folder: /home/cmuser/ASIF/loco-simple/data_json")
 
     app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
-
